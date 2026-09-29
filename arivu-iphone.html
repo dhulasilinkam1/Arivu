@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Arivu — Personal Assistant</title>
+<!-- iPhone / Home Screen app -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Arivu">
+<meta name="theme-color" content="#080c19">
+<link rel="apple-touch-icon" href="__ICON_DATA_URI__">
+<link rel="icon" href="__ICON_DATA_URI__">
+<style>
+  :root{
+    --bg:#080c19; --bg2:#0e1530; --card:rgba(255,255,255,.05); --card2:rgba(255,255,255,.08);
+    --line:rgba(255,255,255,.11); --gold:#f4c05a; --gold2:#e8a93a; --teal:#35d6bd;
+    --text:#eef2ff; --dim:#98a6c9; --red:#ff5f6d; --green:#3fdc8a; --violet:#8b7cf6;
+    --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(900px 500px at 10% -8%, rgba(139,124,246,.20), transparent 60%),
+      radial-gradient(800px 460px at 96% 0%, rgba(53,214,189,.14), transparent 55%),
+      linear-gradient(180deg,var(--bg),var(--bg2) 62%, #070a14);
+    background-attachment:fixed;
+    color:var(--text); min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,Roboto,'Helvetica Neue',Arial,sans-serif;
+    font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y:none;
+  }
+  .ta{font-family:'Noto Sans Tamil','Nirmala UI','Latha','Tamil Sangam MN',system-ui,sans-serif}
+  .wrap{max-width:1120px;margin:0 auto;padding:calc(10px + var(--safe-t)) 14px calc(96px + var(--safe-b))}
+  /* ---------- header ---------- */
+  header.top{display:flex;align-items:center;gap:11px;padding:10px 12px;margin:4px 0 12px;
+    background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+    border:1px solid var(--line);border-radius:20px;backdrop-filter:blur(10px)}
+  .logo{width:44px;height:44px;border-radius:13px;flex:0 0 auto;display:grid;place-items:center;
+    background:linear-gradient(140deg,var(--gold),#d97706);color:#231603;font-weight:700;font-size:21px;
+    box-shadow:0 8px 22px rgba(244,192,90,.26)}
+  .brand h1{margin:0;font-size:17px;font-weight:650;letter-spacing:.2px}
+  .brand p{margin:1px 0 0;font-size:11.5px;color:var(--dim)}
+  .topright{margin-left:auto;display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+  .clock{font-variant-numeric:tabular-nums;font-size:12px;color:var(--dim);display:none}
+  @media(min-width:560px){ .clock{display:block} }
+  .pill{font-size:11px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--card);white-space:nowrap}
+  .pill.good{color:var(--green);border-color:rgba(63,220,138,.35);background:rgba(63,220,138,.08)}
+  .pill.warn{color:var(--gold);border-color:rgba(244,192,90,.35);background:rgba(244,192,90,.08)}
+  /* ---------- cards ---------- */
+  .grid{display:grid;gap:12px}
+  @media(min-width:900px){ .cols-2{grid-template-columns:1.15fr .85fr} }
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+  .card h2{margin:0 0 10px;font-size:14px;font-weight:650;letter-spacing:.2px;display:flex;align-items:center;gap:7px}
+  .muted{color:var(--dim);font-size:12.5px}
+  .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .spacer{flex:1}
+  /* ---------- buttons / inputs ---------- */
+  button{font-family:inherit}
+  .btn{border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:12px;
+    padding:11px 14px;font-size:14px;cursor:pointer;transition:transform .14s,background .16s;
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px}
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:linear-gradient(140deg,var(--gold),var(--gold2));color:#1b1204;border-color:transparent;font-weight:650}
+  .btn.teal{background:linear-gradient(140deg,var(--teal),#1aa896);color:#04211c;border-color:transparent;font-weight:650}
+  .btn.ghost{background:transparent}
+  .btn.danger{color:#ffd5d8;border-color:rgba(255,95,109,.35);background:rgba(255,95,109,.13)}
+  .btn.sm{padding:8px 11px;font-size:12.5px;border-radius:11px;min-height:38px}
+  input,select,textarea{font-family:inherit;font-size:16px;color:var(--text);background:rgba(0,0,0,.30);
+    border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;outline:none;transition:.16s;
+    -webkit-appearance:none;appearance:none}
+  input:focus,select:focus,textarea:focus{border-color:rgba(244,192,90,.55);background:rgba(0,0,0,.4)}
+  select{background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
+  label{display:block;font-size:11.5px;color:var(--dim);margin:0 0 4px 2px}
+  .field{margin-bottom:10px}
+  .f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .f3{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px}
+  @media(max-width:420px){ .f3{grid-template-columns:1fr 1fr} }
+  /* ---------- chat ---------- */
+  .chat{height:min(52vh,430px);overflow-y:auto;padding:4px 2px 8px;display:flex;flex-direction:column;gap:11px;-webkit-overflow-scrolling:touch}
+  .msg{max-width:94%;display:flex;gap:8px;align-items:flex-start;animation:fade .2s ease}
+  .msg .av{width:29px;height:29px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;font-size:13px;font-weight:700}
+  .msg.arivu .av{background:linear-gradient(140deg,var(--gold),#d97706);color:#2a1a02}
+  .msg.me{align-self:flex-end;flex-direction:row-reverse}
+  .msg.me .av{background:linear-gradient(140deg,var(--violet),#5b46d9);color:#fff}
+  .bubble{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;min-width:0}
+  .msg.me .bubble{background:rgba(139,124,246,.14);border-color:rgba(139,124,246,.3)}
+  .say{font-size:14.5px}
+  .spoken{font-size:12.5px;color:var(--dim);margin-top:5px;padding-top:5px;border-top:1px dashed rgba(255,255,255,.12)}
+  .spoken b{color:var(--gold);font-weight:600;font-size:11px;letter-spacing:.3px}
+  .msg .tools{margin-top:9px;display:flex;gap:7px;flex-wrap:wrap}
+  .composer{display:flex;gap:8px;margin-top:10px;align-items:stretch}
+  .composer input{flex:1}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin:4px 0 8px}
+  .chip{font-size:12px;padding:8px 11px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--dim);cursor:pointer}
+  .chip:active{background:var(--card2)}
+  .mic{width:48px;min-height:48px;border-radius:13px;flex:0 0 auto;justify-content:center;font-size:17px}
+  .mic.rec{background:rgba(255,95,109,.2);border-color:rgba(255,95,109,.5);animation:pulse 1.1s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,95,109,.35)}50%{box-shadow:0 0 0 9px rgba(255,95,109,0)}}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  /* ---------- appointments ---------- */
+  .appt{display:flex;gap:11px;padding:13px;border:1px solid var(--line);border-radius:16px;background:var(--card);margin-bottom:10px;align-items:flex-start}
+  .datebox{flex:0 0 auto;width:54px;text-align:center;border-radius:12px;padding:7px 4px;
+    background:linear-gradient(160deg,rgba(244,192,90,.18),rgba(244,192,90,.05));border:1px solid rgba(244,192,90,.25)}
+  .datebox .d{font-size:19px;font-weight:700;line-height:1}
+  .datebox .m{font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+  .datebox .w{font-size:10px;color:var(--dim);margin-top:2px}
+  .appt .body{flex:1;min-width:0}
+  .appt .title{font-size:14.5px;font-weight:600;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .appt .meta{font-size:12.5px;color:var(--dim);margin-top:4px;display:flex;gap:9px;flex-wrap:wrap}
+  .appt .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .badge{font-size:10.5px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+  .b-pending{color:var(--gold);border-color:rgba(244,192,90,.35);background:rgba(244,192,90,.08)}
+  .b-confirmed{color:var(--green);border-color:rgba(63,220,138,.35);background:rgba(63,220,138,.08)}
+  .b-cancelled{color:var(--red);border-color:rgba(255,95,109,.35);background:rgba(255,95,109,.08)}
+  .b-rescheduled{color:var(--teal);border-color:rgba(53,214,189,.35);background:rgba(53,214,189,.08)}
+  .b-awaiting{color:#c9b6ff;border-color:rgba(139,124,246,.4);background:rgba(139,124,246,.12)}
+  .empty{text-align:center;color:var(--dim);padding:24px 10px;font-size:13.5px}
+  .empty .big{font-size:28px;display:block;margin-bottom:6px;opacity:.6}
+  .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+  .kpi .k{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 11px}
+  .kpi .k b{display:block;font-size:19px;letter-spacing:.3px}
+  .kpi .k span{font-size:11px;color:var(--dim)}
+  .banner{display:flex;gap:10px;align-items:center;border-radius:15px;padding:11px 12px;margin-bottom:10px;
+    background:linear-gradient(120deg,rgba(244,192,90,.15),rgba(244,192,90,.04));border:1px solid rgba(244,192,90,.3)}
+  .banner .txt{flex:1;font-size:13.5px;min-width:0}
+  .sep{height:1px;background:var(--line);margin:12px 0}
+  .tag{font-size:10.5px;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,.08);color:var(--dim)}
+  .hint{font-size:12px;color:var(--dim);background:rgba(53,214,189,.07);border:1px solid rgba(53,214,189,.22);border-radius:12px;padding:9px 11px}
+  details.faq{margin-top:8px;border:1px solid var(--line);border-radius:12px;padding:10px 11px;background:rgba(0,0,0,.15)}
+  details.faq summary{cursor:pointer;font-size:13.5px}
+  details.faq p{font-size:12.5px;color:var(--dim)}
+  .log{border:1px solid var(--line);border-radius:16px;background:var(--card);padding:12px;margin-bottom:10px}
+  .log .h{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .log .h b{font-size:14px}
+  /* ---------- bottom tab bar (iPhone style) ---------- */
+  nav.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;justify-content:space-around;
+    padding:5px 4px calc(5px + var(--safe-b));background:rgba(9,13,26,.93);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+    border-top:1px solid var(--line)}
+  nav.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:0;
+    color:var(--dim);font-size:10px;padding:7px 2px;border-radius:12px;cursor:pointer;min-height:52px;letter-spacing:.1px}
+  nav.tabbar button .ic{font-size:19px;line-height:1.1}
+  nav.tabbar button.on{color:var(--gold)}
+  nav.tabbar button.on .ic{transform:translateY(-1px)}
+  section.tabpage{display:none;animation:fade .2s ease}
+  section.tabpage.on{display:block}
+  /* ---------- call overlay ---------- */
+  .overlay{position:fixed;inset:0;z-index:60;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    background:radial-gradient(700px 460px at 50% 0%, rgba(139,124,246,.28), transparent 60%), linear-gradient(180deg,#070a15,#0d1327 60%,#05070f)}
+  .overlay.on{display:block;animation:fade .2s ease}
+  .callwrap{max-width:520px;margin:0 auto;padding:calc(20px + var(--safe-t)) 16px calc(24px + var(--safe-b));display:flex;flex-direction:column;min-height:100%}
+  .calltop{text-align:center}
+  .cavatar{width:88px;height:88px;border-radius:50%;margin:4px auto 10px;display:grid;place-items:center;font-size:31px;font-weight:700;
+    background:linear-gradient(150deg,var(--violet),#4c3fc7);color:#fff;box-shadow:0 12px 38px rgba(139,124,246,.35)}
+  .cavatar.speaking{animation:ringing 1.5s ease-out infinite}
+  @keyframes ringing{0%{box-shadow:0 0 0 0 rgba(139,124,246,.45)}70%{box-shadow:0 0 0 24px rgba(139,124,246,0)}100%{box-shadow:0 0 0 0 rgba(139,124,246,0)}}
+  .cname{font-size:20px;font-weight:650}
+  .cnum{color:var(--dim);font-size:13px;margin-top:2px;font-variant-numeric:tabular-nums}
+  .cstat{margin-top:6px;font-size:13.5px;color:var(--gold);min-height:20px}
+  .ctimer{font-variant-numeric:tabular-nums;color:var(--dim);font-size:12.5px;margin-top:3px}
+  .cdetails{margin:14px 0 2px;border-radius:16px;padding:12px 13px;background:rgba(255,255,255,.05);border:1px solid var(--line);display:none}
+  .cdetails.on{display:block;animation:fade .25s ease}
+  .cdetails .t{font-weight:650;font-size:15px}
+  .cdetails .l{font-size:12.5px;color:var(--dim);margin-top:4px}
+  .wave{height:30px;display:flex;align-items:center;justify-content:center;gap:3.5px;margin:10px 0 4px;opacity:0;transition:.3s}
+  .wave.on{opacity:1}
+  .wave i{width:3.5px;height:8px;border-radius:3px;background:linear-gradient(180deg,var(--gold),var(--teal));animation:wv .9s ease-in-out infinite}
+  .wave i:nth-child(2){animation-delay:.1s}.wave i:nth-child(3){animation-delay:.2s}.wave i:nth-child(4){animation-delay:.3s}
+  .wave i:nth-child(5){animation-delay:.4s}.wave i:nth-child(6){animation-delay:.5s}.wave i:nth-child(7){animation-delay:.6s}
+  .wave i:nth-child(8){animation-delay:.7s}.wave i:nth-child(9){animation-delay:.8s}
+  @keyframes wv{0%,100%{height:8px}50%{height:24px}}
+  .ctrans{flex:1;min-height:110px;max-height:230px;overflow-y:auto;margin:8px 0 10px;display:flex;flex-direction:column;gap:8px}
+  .line{border-radius:14px;padding:8px 11px;max-width:95%;background:var(--card);border:1px solid var(--line);animation:fade .2s ease}
+  .line.them{align-self:flex-end;background:rgba(53,214,189,.10);border-color:rgba(53,214,189,.25)}
+  .line.sys{background:transparent;border-style:dashed;max-width:100%}
+  .line .who{font-size:10px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase}
+  .line .say{font-size:14px;margin-top:2px}
+  .line .spoken{font-size:11.5px}
+  .creplies{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
+  .creplies.off{display:none}
+  .cactions{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;padding-top:2px}
+  .cactions .btn{padding:13px 18px;border-radius:999px}
+  /* ---------- modals / toasts ---------- */
+  .toasts{position:fixed;left:12px;right:12px;bottom:calc(76px + var(--safe-b));z-index:80;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+  @media(min-width:560px){ .toasts{left:auto;right:14px;max-width:340px} }
+  .toast{background:rgba(18,24,46,.97);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:13px;padding:10px 12px;
+    box-shadow:0 14px 40px rgba(0,0,0,.5);animation:fade .22s ease;font-size:13.5px;pointer-events:auto}
+  .toast .spoken{border:0;padding:0;margin-top:3px}
+  .modal{position:fixed;inset:0;z-index:70;display:none;align-items:flex-end;justify-content:center;padding:0;background:rgba(4,6,14,.7)}
+  .modal.on{display:flex}
+  @media(min-width:640px){ .modal{align-items:center;padding:18px} }
+  .modal .box{background:linear-gradient(180deg,#131a35,#0d1226);border:1px solid var(--line);border-radius:22px 22px 0 0;padding:16px 16px calc(16px + var(--safe-b));
+    max-width:600px;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  @media(min-width:640px){ .modal .box{border-radius:20px;padding-bottom:18px} }
+  .sheetgrab{width:38px;height:4px;border-radius:3px;background:rgba(255,255,255,.22);margin:0 auto 12px}
+  footer{margin-top:20px;text-align:center;color:var(--dim);font-size:11.5px}
+  .err{color:var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">அ</div>
+    <div class="brand">
+      <h1>Arivu</h1>
+      <p>Personal assistant · speaks Tamil</p>
+    </div>
+    <div class="topright">
+      <span class="pill" id="voicePill">🎙 —</span>
+      <span class="clock" id="clock">—</span>
+    </div>
+  </header>
+
+  <!-- ============ TODAY ============ -->
+  <section class="tabpage on" id="page-today">
+    <div class="banner" id="soundBanner" style="background:linear-gradient(120deg,rgba(53,214,189,.16),rgba(53,214,189,.04));border-color:rgba(53,214,189,.32)">
+      <span style="font-size:20px">🔊</span>
+      <div class="txt">Arivu speaks <b>Tamil</b>. Tap once to switch the sound on — iPhones always require a tap first.</div>
+      <button class="btn sm teal" id="enableSound">Enable sound</button>
+    </div>
+    <div id="dueBanner"></div>
+    <div class="grid cols-2">
+      <div class="card">
+        <h2>📅 Today</h2>
+        <div id="todayDate" class="muted" style="margin-bottom:10px"></div>
+        <div id="todayList"></div>
+        <div class="sep"></div>
+        <h2>⏭ Next up</h2>
+        <div id="nextBox"></div>
+      </div>
+      <div class="grid" style="align-content:start">
+        <div class="card">
+          <h2>📊 Overview</h2>
+          <div class="kpi" id="kpis"></div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn teal" id="quickCallNext">📞 Confirm next</button>
+            <button class="btn" id="quickAdd">＋ New appointment</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>🔔 Reminders</h2>
+          <div id="reminderList" class="muted">—</div>
+        </div>
+        <div class="card">
+          <h2>👋 Arivu says</h2>
+          <div class="say" id="greetLine">Hello! I am Arivu, your personal assistant. I keep your appointments and call to confirm them — in Tamil, as you asked.</div>
+          <div class="spoken"><b>🎙 SPOKEN IN TAMIL</b><div class="ta" id="greetTa">வணக்கம்! நான் அறிவு, உங்கள் தனிப்பட்ட உதவியாளர். சந்திப்புகளை உருவாக்கவோ, அழைத்து உறுதிப்படுத்தவோ என்னிடம் சொல்லுங்கள்.</div></div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn sm" id="playGreet">🔊 Play voice</button>
+            <button class="btn sm ghost" id="delSamples">🧹 Remove sample data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ APPOINTMENTS ============ -->
+  <section class="tabpage" id="page-appts">
+    <div class="card" style="margin-bottom:12px">
+      <div class="row">
+        <h2 style="margin:0">📋 Appointments</h2>
+        <div class="spacer"></div>
+        <button class="btn primary" id="addApptBtn">＋ New</button>
+        <button class="btn sm" id="exportIcsAll">⤓ .ics</button>
+      </div>
+      <div class="sep"></div>
+      <div class="row">
+        <input id="search" placeholder="Search title, person, place…" style="flex:1;min-width:170px">
+        <select id="filterStatus" style="width:auto;min-width:150px">
+          <option value="">All statuses</option>
+          <option value="pending">🕓 Pending</option>
+          <option value="confirmed">✅ Confirmed</option>
+          <option value="rescheduled">🔁 Rescheduled</option>
+          <option value="awaiting">📵 Awaiting reply</option>
+          <option value="cancelled">❌ Cancelled</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid cols-2" style="align-items:start">
+      <div>
+        <h2 class="muted" style="font-size:12.5px;margin:2px 0 8px">🔜 Upcoming</h2>
+        <div id="upcoming"></div>
+      </div>
+      <div>
+        <h2 class="muted" style="font-size:12.5px;margin:2px 0 8px">📜 Past &amp; closed</h2>
+        <div id="past"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ASSISTANT ============ -->
+  <section class="tabpage" id="page-assistant">
+    <div class="grid cols-2">
+      <div class="card">
+        <h2>💬 Talk to Arivu</h2>
+        <div class="muted" style="margin-bottom:8px">Type or speak — English or Tamil. Arivu replies on screen in English and <b>always speaks in Tamil</b>.</div>
+        <div class="chips" id="chips"></div>
+        <div class="chat" id="chat"></div>
+        <div class="composer">
+          <button class="btn mic" id="micBtn" title="Speak">🎤</button>
+          <input id="chatInput" placeholder="e.g. Dentist tomorrow 10am">
+          <button class="btn primary" id="sendBtn" style="min-width:56px">➤</button>
+        </div>
+        <div class="muted" id="micHint" style="margin-top:7px"></div>
+      </div>
+      <div class="grid" style="align-content:start">
+        <div class="card">
+          <h2>✨ What Arivu can do</h2>
+          <div class="muted" style="font-size:13px">
+            • <b>Schedule</b> appointments from a sentence — it understands dates &amp; times in English and Tamil.<br>
+            • <b>Confirm by call</b> — Arivu phones the contact, speaks Tamil, and updates the appointment.<br>
+            • <b>Reminders</b> — automatic on-screen + spoken Tamil reminder before each appointment.<br>
+            • <b>Auto-call</b> — pick a time per appointment and Arivu proposes / starts the call.<br>
+            • <b>Calendar export</b> — .ics file that imports into iPhone Calendar or Google Calendar.
+          </div>
+        </div>
+        <div class="card">
+          <h2>📞 How calls work now</h2>
+          <div class="muted" style="font-size:13px">This is the <b>in-app call demo</b> you chose: the call screen opens, Arivu speaks Tamil out loud through the phone speaker, and you play the person who answers (tap a reply, type, or speak it). The outcome is saved on the appointment. Real phone lines (Twilio) can be added later — just ask.</div>
+        </div>
+        <div class="card">
+          <h2>🗣️ Voice status</h2>
+          <div id="voiceStatus" class="muted" style="font-size:13px"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CALLS ============ -->
+  <section class="tabpage" id="page-calls">
+    <div class="grid cols-2" style="align-items:start">
+      <div class="card">
+        <h2>📞 Call log</h2>
+        <div id="callLogList"></div>
+      </div>
+      <div class="grid" style="align-content:start">
+        <div class="card">
+          <h2>🤖 Automatic calling</h2>
+          <label class="row" style="gap:9px;font-size:14px;color:var(--text);margin:0 0 8px">
+            <input type="checkbox" id="autoCall" style="width:auto">
+            <span>Suggest a call when the confirm time arrives</span>
+          </label>
+          <label class="row" style="gap:9px;font-size:14px;color:var(--text)">
+            <input type="checkbox" id="autoStart" style="width:auto">
+            <span>Start the suggested call automatically</span>
+          </label>
+          <div class="muted" style="margin-top:10px;font-size:12px">Each appointment can have its own “confirm call at” time (set it when you add the appointment, or let Arivu suggest one).</div>
+          <div id="nextDue" class="muted" style="margin-top:9px;font-size:12.5px"></div>
+        </div>
+        <div class="card">
+          <h2>🧪 Quick demo</h2>
+          <div class="muted" style="margin-bottom:9px">See exactly how a confirmation call sounds.</div>
+          <div class="row">
+            <button class="btn teal" id="demoConfirm">📞 Confirmation call</button>
+            <button class="btn" id="demoReminder">🔔 Reminder call</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section class="tabpage" id="page-settings">
+    <div class="grid cols-2" style="align-items:start">
+      <div class="card">
+        <h2>📱 On your iPhone</h2>
+        <div class="muted" style="font-size:13px">Add Arivu to your Home Screen to use it full-screen like an app:</div>
+        <ol class="muted" style="font-size:13px;padding-left:20px;margin:8px 0 0">
+          <li>Save this file (or open it in <b>Safari</b>).</li>
+          <li>Tap the <b>Share</b> button, then <b>Add to Home Screen</b>.</li>
+          <li>Open Arivu from the icon — it runs full-screen, no browser bars.</li>
+        </ol>
+        <div class="hint" style="margin-top:10px">🎤 Voice input and sound need a tap first (Apple’s rule). Tap anywhere once, then talk.</div>
+      </div>
+      <div class="card">
+        <h2>👤 Your details</h2>
+        <div class="f2">
+          <div class="field"><label>Your name</label><input id="setName" placeholder="e.g. Murugan"></div>
+          <div class="field"><label>Your phone</label><input id="setPhone" placeholder="+358 …"></div>
+        </div>
+        <div class="muted" style="font-size:12px">Arivu introduces itself as your assistant when it calls on your behalf.</div>
+      </div>
+      <div class="card">
+        <h2>🎙 Voice</h2>
+        <div class="field"><label>Voice used for live details (appointment date/time)</label><select id="voiceSel"></select></div>
+        <div class="f2">
+          <div class="field"><label>Speed · <span id="rateVal">1.00</span></label><input type="range" id="rate" min="0.6" max="1.4" step="0.05" style="padding:0;height:34px"></div>
+          <div class="field"><label>Pitch · <span id="pitchVal">1.00</span></label><input type="range" id="pitch" min="0.6" max="1.4" step="0.05" style="padding:0;height:34px"></div>
+        </div>
+        <div class="field"><label>Read appointment details aloud</label>
+          <select id="detailRead">
+            <option value="auto">Tamil voice if the device has one, otherwise silent</option>
+            <option value="off">Always silent (shown on screen only)</option>
+          </select>
+        </div>
+        <div class="row">
+          <button class="btn" id="testVoice">🔊 Test device voice</button>
+          <button class="btn ghost" id="testClip">▶ Play recorded voice</button>
+        </div>
+        <div class="hint" style="margin-top:10px">🔒 <b>Talking language: Tamil only.</b> Scripted call lines always use the recorded Tamil voice, so calls are Tamil even on an iPhone with no Tamil voice installed.</div>
+      </div>
+      <div class="card">
+        <h2>💾 Data</h2>
+        <div class="muted" style="font-size:12.5px;margin-bottom:9px">Everything stays on this device — no account, no server. In a preview window storage may be blocked; download the file and open it in Safari to keep data permanently.</div>
+        <div class="row">
+          <button class="btn" id="expData">⤓ Export JSON</button>
+          <button class="btn" id="impData">⤒ Import JSON</button>
+          <button class="btn danger" id="resetData">🗑 Reset</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>ℹ️ Help</h2>
+        <details class="faq" open><summary>How does the call demo work?</summary>
+          <p>The call screen opens and Arivu speaks Tamil through your speaker. You act as the person who answers: tap <b>Yes</b> / <b>No</b> / <b>Another time</b> (or type/speak). The appointment status changes to confirmed, cancelled, or rescheduled and the whole call is saved in the Call log.</p></details>
+        <details class="faq"><summary>Can it ring a real phone number?</summary>
+          <p>Not yet — that needs a telephone provider such as Twilio, and the Tamil audio can be served from the clips already inside this app. Ask and it can be wired up.</p></details>
+        <details class="faq"><summary>Nothing speaks when I open it?</summary>
+          <p>Apple blocks sound until you touch the screen once: tap <b>Play voice</b> or anywhere, then it works. Also check the side switch isn’t on silent.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <footer>Arivu · personal assistant demo · speaks Tamil, English interface · data stays on your device</footer>
+</div>
+
+<!-- ============ bottom tab bar ============ -->
+<nav class="tabbar" id="tabs">
+  <button class="on" data-tab="today"><span class="ic">📅</span>Today</button>
+  <button data-tab="appts"><span class="ic">📋</span>Appts</button>
+  <button data-tab="assistant"><span class="ic">💬</span>Assistant</button>
+  <button data-tab="calls"><span class="ic">📞</span>Calls</button>
+  <button data-tab="settings"><span class="ic">⚙️</span>Settings</button>
+</nav>
+
+<!-- ============ appointment form ============ -->
+<div class="modal" id="apptModal"><div class="box">
+  <div class="sheetgrab"></div>
+  <div class="row" style="margin-bottom:12px">
+    <h2 style="margin:0" id="apptModalTitle">New appointment</h2>
+    <div class="spacer"></div>
+    <button class="btn sm ghost" id="apptClose">✕</button>
+  </div>
+  <input type="hidden" id="fId">
+  <div class="field"><label>Title *</label><input id="fTitle" placeholder="e.g. Dentist"></div>
+  <div class="f2">
+    <div class="field"><label>Contact person</label><input id="fContact" placeholder="Dr. Kumar"></div>
+    <div class="field"><label>Phone</label><input id="fPhone" placeholder="+91 … / +358 …"></div>
+  </div>
+  <div class="f3">
+    <div class="field"><label>Date *</label><input type="date" id="fDate"></div>
+    <div class="field"><label>Time *</label><input type="time" id="fTime"></div>
+    <div class="field"><label>Minutes</label><input type="number" id="fDur" min="5" step="5" value="30"></div>
+  </div>
+  <div class="field"><label>Location</label><input id="fLoc" placeholder="Mehiläinen Espoo / Zoom"></div>
+  <div class="f2">
+    <div class="field"><label>Confirm call at</label><input type="datetime-local" id="fConfirm"></div>
+    <div class="field"><label>Reminder at</label><input type="datetime-local" id="fRemind"></div>
+  </div>
+  <div class="field"><label>Status</label>
+    <select id="fStatus">
+      <option value="pending">🕓 Pending — needs confirmation</option>
+      <option value="confirmed">✅ Confirmed</option>
+      <option value="rescheduled">🔁 Rescheduled</option>
+      <option value="awaiting">📵 Awaiting reply</option>
+      <option value="cancelled">❌ Cancelled</option>
+    </select></div>
+  <div class="field"><label>Notes</label><input id="fNotes" placeholder="e.g. bring the documents"></div>
+  <div class="row" style="margin-top:6px">
+    <button class="btn primary" id="apptSave">Save</button>
+    <button class="btn ghost" id="apptCancelBtn">Cancel</button>
+    <div class="spacer"></div>
+    <button class="btn sm" id="apptSuggestConfirm">✨ Suggest call time</button>
+  </div>
+</div></div>
+
+<!-- ============ text / preview sheet ============ -->
+<div class="modal" id="textModal"><div class="box">
+  <div class="sheetgrab"></div>
+  <div class="row" style="margin-bottom:10px"><h2 style="margin:0" id="textModalTitle">—</h2><div class="spacer"></div>
+  <button class="btn sm ghost" id="textClose">✕</button></div>
+  <div id="textModalBody"></div>
+</div></div>
+
+<!-- ============ call overlay ============ -->
+<div class="overlay" id="callOverlay">
+  <div class="callwrap">
+    <div class="calltop">
+      <div class="cavatar" id="cAvatar">?</div>
+      <div class="cname" id="cName">—</div>
+      <div class="cnum" id="cNum"></div>
+      <div class="cstat" id="cStat">—</div>
+      <div class="ctimer" id="cTimer">00:00</div>
+    </div>
+    <div class="wave" id="cWave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="cdetails" id="cDetails"></div>
+    <div class="ctrans" id="cTrans"></div>
+    <div class="creplies" id="cReplies"></div>
+    <div class="cactions" id="cActions"></div>
+    <div class="muted" style="text-align:center;margin-top:12px;font-size:11.5px">In-app call demo · Arivu speaks Tamil · you play the other side</div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* ============================================================
+   ARIVU · English interface · Tamil speech · single-file app
+   ============================================================ */
+'use strict';
+
+/* ---------- recorded Tamil voice clips (base64 data URIs) ---------- */
+const CLIPS = /*__CLIP_DATA__*/ {"placeholder":""};
+const CLIP_TEXT = {
+  ui_greet:      {ta:'வணக்கம்! நான் அறிவு, உங்கள் தனிப்பட்ட உதவியாளர். சந்திப்புகளை உருவாக்கவோ, அழைத்து உறுதிப்படுத்தவோ என்னிடம் சொல்லுங்கள்.',
+                  en:'Hello! I am Arivu, your personal assistant. Tell me to create appointments or make confirmation calls.'},
+  call_hello:    {ta:'வணக்கம்! நான் அறிவு. உங்கள் நண்பரின் தனிப்பட்ட உதவியாளர் பேசுகிறேன். ஒரு சந்திப்பை உறுதிப்படுத்த அழைத்தேன். இப்போது பேசலாமா?',
+                  en:'Hello! This is Arivu, calling on behalf of my client. I am calling to confirm an appointment. Can we talk now?'},
+  call_ask:      {ta:'உங்களுக்கு ஒரு சந்திப்பு பதிவு செய்யப்பட்டுள்ளது. விவரங்கள் திரையில் உள்ளன. இது இன்னும் உறுதியாக உள்ளதா? ஆம் அல்லது இல்லை என்று சொல்லுங்கள்.',
+                  en:'An appointment is booked for you — details are on the screen. Is it still confirmed? Please say yes or no.'},
+  call_yes:      {ta:'மிக்க நன்றி! சந்திப்பு உறுதிப்படுத்தப்பட்டது. உங்கள் நாள் நன்றாக அமையட்டும்!',
+                  en:'Thank you so much! The appointment is confirmed. Have a great day!'},
+  call_cancel:   {ta:'புரிந்தது, சந்திப்பை ரத்து செய்கிறேன். தகவலுக்கு மிக்க நன்றி.',
+                  en:'Understood — I will cancel the appointment. Thank you for letting me know.'},
+  call_resched:  {ta:'பரவாயில்லை! புதிய நேரத்தை பதிவு செய்கிறேன். விவரங்களை அனுப்புகிறேன். நன்றி!',
+                  en:'No problem! I will record a new time and send the details. Thank you!'},
+  call_voicemail:{ta:'வணக்கம், இது அறிவு. ஒரு சந்திப்பை உறுதிப்படுத்தும் அழைப்பு. தயவுசெய்து பின்னர் திரும்ப அழையுங்கள். நன்றி!',
+                  en:'Hello, this is Arivu, calling to confirm an appointment. Please call back later. Thank you!'},
+  call_reminder: {ta:'நினைவூட்டல்! விரைவில் ஒரு சந்திப்பு உள்ளது. விவரங்கள் திரையில் உள்ளன. தயவுசெய்து நேரத்திற்கு வாருங்கள். நன்றி!',
+                  en:'A reminder! You have an appointment coming up soon. Details are on screen. Please be on time. Thank you!'},
+  appt_added:    {ta:'சரி, சந்திப்பு சேர்க்கப்பட்டது. நினைவூட்டல் அமைக்கப்பட்டது.',
+                  en:'Done — the appointment is added and a reminder is set.'},
+  call_bye:      {ta:'நன்றி! நல்ல நாள்!', en:'Thank you! Have a good day!'}
+};
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const P = n => String(n).padStart(2,'0');
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = d => d.getFullYear()+'-'+P(d.getMonth()+1)+'-'+P(d.getDate());
+const fmtTime = (h,m) => P(h)+':'+P(m);
+const parseDT = (ds,ts) => { const a=(ds||'').split('-').map(Number); const b=(ts||'00:00').split(':').map(Number); return new Date(a[0],(a[1]||1)-1,a[2]||1,b[0]||0,b[1]||0,0,0); };
+const startOfDay = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
+const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+const dayDiff = (a,b) => Math.round((startOfDay(a)-startOfDay(b))/86400000);
+const cap = s => s ? s.charAt(0).toUpperCase()+s.slice(1) : s;
+function taDate(d){ try { return d.toLocaleDateString('ta-IN',{weekday:'long',day:'numeric',month:'long'}); } catch(e){ return enDate(d); } }
+function enDate(d){ return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); }
+function enFull(d){ return d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+function relDay(d){
+  const n = dayDiff(d, new Date());
+  if (n===0) return 'Today';
+  if (n===1) return 'Tomorrow';
+  if (n===2) return 'In 2 days';
+  if (n<0) return Math.abs(n)+' days ago';
+  return 'In '+n+' days';
+}
+function durText(min){ min=Number(min)||0; if(min<60) return min+' min'; const h=Math.floor(min/60), m=min%60; return h+' h'+(m?' '+m+' min':''); }
+function isoLocal(d){ return d.getFullYear()+'-'+P(d.getMonth()+1)+'-'+P(d.getDate())+'T'+P(d.getHours())+':'+P(d.getMinutes()); }
+function fromIsoLocal(s){ if(!s) return null; const a=s.split('T'); return parseDT(a[0],a[1]); }
+function niceDT(s){ const d=fromIsoLocal(s); return d ? d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : ''; }
+
+/* ---------- storage ---------- */
+const Mem = {};
+const Store = {
+  persistent:false,
+  test(){ try { localStorage.setItem('__a','1'); localStorage.removeItem('__a'); this.persistent=true; } catch(e){ this.persistent=false; } },
+  get(k){ try { if(!this.persistent) throw 0; return localStorage.getItem(k); } catch(e){ return (k in Mem)?Mem[k]:null; } },
+  set(k,v){ try { if(!this.persistent) throw 0; localStorage.setItem(k,v); } catch(e){ Mem[k]=v; } },
+  del(k){ try { if(!this.persistent) throw 0; localStorage.removeItem(k); } catch(e){ delete Mem[k]; } }
+};
+
+/* ---------- state ---------- */
+const KEY = 'arivu_v2';
+const DEFSET = { voiceURI:'', rate:1, pitch:1, detailRead:'auto', autoCall:true, autoStart:false };
+let S = { profile:{name:'',phone:''}, appointments:[], callLog:[], settings:Object.assign({},DEFSET) };
+function save(){ Store.set(KEY, JSON.stringify(S)); }
+function load(){
+  Store.test();
+  const raw = Store.get(KEY);
+  if (raw){
+    try{ const o=JSON.parse(raw);
+      S.appointments = o.appointments||[]; S.callLog = o.callLog||[];
+      S.profile = o.profile||{name:'',phone:''};
+      S.settings = Object.assign({}, DEFSET, o.settings||{});
+    }catch(e){ seed(); save(); }
+  } else { seed(); save(); }
+}
+function seed(){
+  const now = new Date();
+  const soon = new Date(now.getTime()+3*60*1000);   // demo: confirm-call due in 3 min
+  const soon2 = new Date(now.getTime()+6*60*1000);  // demo: reminder in 6 min
+  S.appointments = [
+    { id:uid(), title:'Doctor appointment', contact:'Dr. Kumar', phone:'+91 98765 43210', location:'Mehiläinen, Espoo',
+      date:fmtDate(addDays(now,1)), time:'10:00', durationMin:30, notes:'Bring the medical report', status:'pending',
+      confirmAt:isoLocal(soon), reminderAt:isoLocal(soon2), reminderDone:false, sample:true, created:new Date().toISOString(), calls:[] },
+    { id:uid(), title:'Business meeting', contact:'Anna Virtanen', phone:'+358 40 123 4567', location:'Iso Omena, Espoo',
+      date:fmtDate(addDays(now,2)), time:'15:30', durationMin:45, notes:'Contract documents', status:'pending',
+      confirmAt:isoLocal(parseDT(fmtDate(addDays(now,1)),'09:00')), reminderAt:'', reminderDone:false, sample:true, created:new Date().toISOString(), calls:[] },
+    { id:uid(), title:'Gym class', contact:'Coach Salmi', phone:'', location:'Espoo Areena',
+      date:fmtDate(addDays(now,-3)), time:'18:00', durationMin:60, notes:'', status:'confirmed',
+      confirmAt:'', reminderAt:'', reminderDone:true, sample:true, created:new Date().toISOString(), calls:[] }
+  ];
+}
+
+/* ---------- audio ---------- */
+let curAudio=null, ac=null;
+function unlockAudio(){ try{ if(!ac) ac = new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); }catch(e){} }
+function stopAudio(){ if(curAudio){ try{ curAudio.pause(); curAudio.currentTime=0; }catch(e){} curAudio=null; } try{ speechSynthesis.cancel(); }catch(e){} }
+function playClip(name, timeoutMs){
+  return new Promise(res => {
+    const src = CLIPS[name];
+    if (!src){ setTimeout(res, 400); return; }
+    let done=false;
+    const fin=v=>{ if(done) return; done=true;
+      if (v){ const b=document.getElementById('soundBanner'); if (b) b.remove(); }
+      res(v||false); };
+    try{
+      stopAudio();
+      const a = new Audio(src); curAudio=a;
+      a.onended = ()=>fin(true); a.onerror = ()=>setTimeout(()=>fin(false), 1200);
+      const p = a.play(); if (p && p.catch) p.catch(()=>setTimeout(()=>fin(false), 1800));
+      setTimeout(()=>{ try{ if(!a.paused) return; }catch(e){} fin(false); }, timeoutMs||16000);
+    }catch(e){ setTimeout(()=>fin(false), 1200); }
+  });
+}
+let taVoice=null;
+function pickVoices(){
+  let vs=[]; try{ vs = speechSynthesis.getVoices()||[]; }catch(e){ vs=[]; }
+  taVoice = vs.find(v => (v.lang||'').toLowerCase().startsWith('ta')) || null;
+  const sel = $('#voiceSel'); if (!sel) return;
+  const cur = S.settings.voiceURI;
+  let html = '<option value="">Auto — Tamil voice if available</option>';
+  vs.forEach(v=>{ html += '<option value="'+esc(v.voiceURI)+'">'+esc(v.name)+' · '+esc(v.lang)+'</option>'; });
+  sel.innerHTML = html;
+  sel.value = vs.some(v=>v.voiceURI===cur) ? cur : '';
+  const pill = $('#voicePill');
+  if (taVoice){ pill.textContent='🎙 Tamil voice ready'; pill.className='pill good'; }
+  else { pill.textContent='🎙 Recorded Tamil voice'; pill.className='pill warn'; }
+  const st = $('#voiceStatus');
+  if (st) st.innerHTML = taVoice
+    ? '✅ This device has a Tamil voice (<b>'+esc(taVoice.name)+'</b>) — Arivu can also read the date and time aloud in Tamil.'
+    : '⚠️ No Tamil system voice here, so live date/time read-out stays silent. Not a problem: every scripted line in a call uses the <b>recorded Tamil voice</b> built into this app.';
+}
+function speakText(text, opts){
+  return new Promise(res=>{
+    let done=false; const fin=()=>{ if(done) return; done=true; res(true); };
+    try{
+      if(!('speechSynthesis' in window)){ setTimeout(fin, 1500); return; }
+      const u = new SpeechSynthesisUtterance(text);
+      let v=null; const uri=S.settings.voiceURI;
+      if (uri) v = (speechSynthesis.getVoices()||[]).find(x=>x.voiceURI===uri)||null;
+      if (!v) v = taVoice;
+      if (v){ u.voice=v; u.lang=v.lang; } else u.lang = (opts&&opts.lang)||'ta-IN';
+      u.rate = Number(S.settings.rate)||1; u.pitch = Number(S.settings.pitch)||1;
+      u.onend = fin; u.onerror = fin;
+      speechSynthesis.speak(u);
+      setTimeout(fin, Math.min(20000, 3000 + text.length*160));
+    }catch(e){ setTimeout(fin, 1200); }
+  });
+}
+/* Speak a scripted line — Tamil only: recorded clip, or Tamil text if no clip. */
+async function say(key){
+  const t = CLIP_TEXT[key]; if(!t) return;
+  if (CLIPS[key]) return playClip(key);
+  if (taVoice || S.settings.voiceURI) return speakText(t.ta, {lang:'ta-IN'});
+}
+function speakTamilIfPossible(text){ if (taVoice || S.settings.voiceURI) return speakText(text, {lang:'ta-IN'}); return Promise.resolve(false); }
+function beep(freq, dur){
+  try{ if(!ac) return; const o=ac.createOscillator(), g=ac.createGain(); o.type='sine'; o.frequency.value=freq||880;
+    o.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(0.0001, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.09, ac.currentTime+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+(dur||0.18));
+    o.start(); o.stop(ac.currentTime+(dur||0.18)+0.02);
+  }catch(e){}
+}
+let ringTimer=null, ringOsc=null, ringGain=null;
+function startRing(){
+  try{ if(!ac) return; stopRing();
+    ringOsc=[ac.createOscillator(),ac.createOscillator()]; ringOsc[0].frequency.value=440; ringOsc[1].frequency.value=480;
+    ringGain=ac.createGain(); ringGain.gain.value=0.0001; ringOsc.forEach(o=>{ o.type='sine'; o.connect(ringGain); o.start(); });
+    ringGain.connect(ac.destination);
+    let on=false; const gate=()=>{ if(!ringGain) return; on=!on; try{ ringGain.gain.setTargetAtTime(on?0.05:0.0001, ac.currentTime, 0.02); }catch(e){} };
+    gate(); ringTimer=setInterval(gate,1500);
+  }catch(e){}
+}
+function stopRing(){ if(ringTimer){ clearInterval(ringTimer); ringTimer=null; } try{ ringOsc&&ringOsc.forEach(o=>o.stop()); }catch(e){} ringOsc=null; ringGain=null; }
+
+/* ============================================================
+   COMMAND PARSER  (English + Tamil input)
+   ============================================================ */
+const TA_NUM = {'ஒரு':1,'ஒன்று':1,'இரண்டு':2,'ரெண்டு':2,'மூன்று':3,'மூனு':3,'நான்கு':4,'ஐந்து':5,'ஆறு':6,'ஏழு':7,'எட்டு':8,'ஒன்பது':9,'பத்து':10,'பதினொன்று':11,'பன்னிரண்டு':12};
+const TA_MONTHS = {'ஜனவரி':0,'பிப்ரவரி':1,'மார்ச்':2,'மார்ச':2,'ஏப்ரல்':3,'மே':4,'ஜூன்':5,'ஜூலை':6,'ஆகஸ்ட்':7,'ஆகஸ்ட':7,'செப்டம்பர்':8,'செப்டெம்பர்':8,'அக்டோபர்':9,'நவம்பர்':10,'டிசம்பர்':11};
+const EN_MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,sept:8,oct:9,nov:10,dec:11};
+const WD = {'ஞாயிறு':0,'ஞாயிற்றுக்கிழமை':0,'திங்கள்':1,'திங்கட்கிழமை':1,'செவ்வாய்':2,'செவ்வாய்க்கிழமை':2,'புதன்':3,'புதன்கிழமை':3,'வியாழன்':4,'வியாழக்கிழமை':4,'வெள்ளி':5,'வெள்ளிக்கிழமை':5,'சனி':6,'சனிக்கிழமை':6,
+  sunday:0,sun:0,monday:1,mon:1,tuesday:2,tue:2,tues:2,wednesday:3,wed:3,thursday:4,thu:4,thurs:4,friday:5,fri:5,saturday:6,sat:6};
+const VERBS = ['create','add','book','schedule','set up','set','make','new','appointment with','உருவாக்கு','உருவாக்க','பதிவு','சேர்','சேர்க்க','செய்','வை','வைக்க','எழுது',
+  'ஒரு','ஒன்று','எனக்கு','for','please','தயவுசெய்து','வேண்டும்','a','an','the',
+  'morning','evening','night','afternoon','காலை','காலையில்','மாலை','மாலையில்','இரவு','மதியம்','am','pm','o\'clock','oclock'];
+const FILL = ['க்கு','இல்','இற்கு','அன்று','நேரத்தில்','நாளில்','மணிக்கு','at','on','in'];
+const CMDWORDS = /(show|list|காட்டு|பார்|என்ன இருக்கு|சொல்லு|confirm|அழை|உறுதி|call|cancel|ரத்து|remind|நினைவூட்டு|help|உதவி)/;
+
+function extractPhone(t){
+  const m = t.match(/(\+?\d[\d\s\-()]{7,}\d)/);
+  if (!m) return null;
+  const digits = m[1].replace(/\D/g,'');
+  if (digits.length < 9 || digits.length > 15) return null;
+  if (/^\d{1,4}[\/.-]\d{1,2}/.test(m[1].trim()) || /^\d{1,2}:\d{2}$/.test(m[1].trim())) return null;
+  return m[1].trim();
+}
+function extractDate(t, ref){
+  ref = ref || new Date();
+  const low = t.toLowerCase();
+  const out = { date:null, matched:[] };
+  const set = (d,s) => { out.date=d; if(s) out.matched.push(s); return out; };
+  let m;
+  if ((m = t.match(/(\d{4})-(\d{2})-(\d{2})/))) return set(new Date(+m[1],+m[2]-1,+m[3]), m[0]);
+  if ((m = t.match(/\b(\d{1,2})[\/.](\d{1,2})(?:[\/.](\d{2,4}))?\b/))){
+    const a=+m[1], b=+m[2];
+    if (a>31||b>12) return out;
+    let y = m[3] ? (String(m[3]).length===4 ? +m[3] : 2000+ +m[3]) : ref.getFullYear();
+    let d = new Date(y,b-1,a);
+    if (!m[3] && d < startOfDay(ref)) d = new Date(ref.getFullYear()+1,b-1,a);
+    return set(d, m[0]);
+  }
+  if ((m = low.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})\b/))){
+    const mo=EN_MONTHS[m[1]], day=+m[2]; let d=new Date(ref.getFullYear(),mo,day);
+    if (d<startOfDay(ref)) d=new Date(ref.getFullYear()+1,mo,day);
+    return set(d, m[0]);
+  }
+  if ((m = low.match(/\b(\d{1,2})\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\b/))){
+    const mo=EN_MONTHS[m[2]], day=+m[1]; let d=new Date(ref.getFullYear(),mo,day);
+    if (d<startOfDay(ref)) d=new Date(ref.getFullYear()+1,mo,day);
+    return set(d, m[0]);
+  }
+  for (const k in TA_MONTHS){
+    let mm = t.match(new RegExp(k+'\\s*(\\d{1,2})'));
+    if (mm){ const day=+mm[1]; let d=new Date(ref.getFullYear(),TA_MONTHS[k],day);
+      if (d<startOfDay(ref)) d=new Date(ref.getFullYear()+1,TA_MONTHS[k],day); return set(d, mm[0]); }
+    mm = t.match(new RegExp('(\\d{1,2})\\s*'+k));
+    if (mm){ const day=+mm[1]; let d=new Date(ref.getFullYear(),TA_MONTHS[k],day);
+      if (d<startOfDay(ref)) d=new Date(ref.getFullYear()+1,TA_MONTHS[k],day); return set(d, mm[0]); }
+  }
+  if (/நாளை\s*மறுநாள்|day after tomorrow/.test(low)) { const mm=t.match(/நாளை\s*மறுநாள்|day after tomorrow/i); return set(addDays(ref,2), mm&&mm[0]); }
+  if (/நாளை|tomorrow|\btmr\b|\btmrw\b/.test(low)) { const mm=t.match(/நாளை|tomorrow|tmr|tmrw/i); return set(addDays(ref,1), mm&&mm[0]); }
+  if (/இன்று|today|இன்னிக்கு/.test(low)) { const mm=t.match(/இன்று|today|இன்னிக்கு/i); return set(new Date(ref), mm&&mm[0]); }
+  if (/அடுத்த\s*வாரம்|next week/.test(low)) { const mm=t.match(/அடுத்த\s*வாரம்|next week/i); return set(addDays(ref,7), mm&&mm[0]); }
+  for (const k in WD){
+    if (low.indexOf(k) >= 0){
+      const d = new Date(ref); const diff = (WD[k]-d.getDay()+7)%7; d.setDate(d.getDate()+diff);
+      const mm = t.match(new RegExp(k,'i'));
+      return set(d, mm&&mm[0]);
+    }
+  }
+  return out;
+}
+function extractTime(t){
+  const low = t.toLowerCase(); const out = { time:null, matched:[] };
+  let h=null, mi=0, matched='', m;
+  if ((m = t.match(/\b(\d{1,2})[:.](\d{2})\s*(am|pm)?/))){ h=+m[1]; mi=+m[2]; matched=m[0]; if(m[3]==='pm'&&h<12) h+=12; if(m[3]==='am'&&h===12) h=0; }
+  if (h===null && (m = t.match(/(\d{1,2})\s*(?:மணி|மணிக்கு|o'?clock|oclock)/))){ h=+m[1]; matched=m[0]; }
+  if (h===null){
+    for (const k in TA_NUM){
+      const mm = t.match(new RegExp(k+'\\s*(?:மணி|மணிக்கு)'));
+      if (mm){ h=TA_NUM[k]; matched=mm[0]; break; }
+    }
+  }
+  if (h===null && (m = low.match(/\b(\d{1,2})\s*(am|pm)\b/))){ h=+m[1]; matched=m[0]; if(m[2]==='pm'&&h<12) h+=12; if(m[2]==='am'&&h===12) h=0; }
+  if (h===null && (m = low.match(/\bat\s+(\d{1,2})\b/))){ h=+m[1]; matched=m[0]; }
+  if (h===null) return out;
+  if (/பாதி|half/.test(low)) mi = 30;
+  const pm = /மாலை|இரவு|மதியம்|evening|afternoon|night|pm/.test(low);
+  const am = /காலை|காலையில்|morning|am/.test(low) && !pm;
+  if (pm && h<12) h+=12;
+  if (am && h===12) h=0;
+  if (!pm && !am && h>=1 && h<=7) h+=12;      /* “3 o'clock” → 15:00 */
+  if (h>23 || mi>59) return out;
+  out.time = fmtTime(h,mi);
+  out.matched.push(matched);
+  if (/மணிக்கு/.test(t)) out.matched.push('மணிக்கு');
+  return out;
+}
+function extractContact(t){
+  let m = t.match(/\bwith\s+([A-Z][A-Za-z.'-]*(?:\s+[A-Z][A-Za-z.'-]*)?)/);
+  if (m) return {contact:m[1].trim(), matched:m[0]};
+  m = t.match(/\bwith\s+([A-Za-z\u0B80-\u0BFF]+(?:\s+[A-Za-z\u0B80-\u0BFF]+)?)/);
+  if (m) return {contact:m[1].trim(), matched:m[0]};
+  m = t.match(/([A-Za-z\u0B80-\u0BFF]+(?:\s+[A-Za-z\u0B80-\u0BFF]+)?)\s+(?:உடன்|உடனான)/);
+  if (m) return {contact:m[1].trim(), matched:m[0]};
+  return {contact:'', matched:''};
+}
+function extractLocation(t){
+  const m = t.match(/(?:@\s*|location[:\s]+|இடம்[:\s]+|at\s+)([A-Za-z\u0B80-\u0BFF][\w\u0B80-\u0BFF.,' -]{2,40})/);
+  if (!m) return {loc:'', matched:''};
+  const cand = m[1].trim();
+  if (/^\d/.test(cand)) return {loc:'', matched:''};
+  return {loc:cand, matched:m[0]};
+}
+function cleanTitle(t, removeList){
+  const esc2 = x => x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  let s = ' ' + t + ' ';
+  removeList.filter(Boolean).forEach(x=>{ s = s.split(x).join(' '); });
+  VERBS.concat(FILL).forEach(w=>{
+    if (!w) return;
+    s = s.replace(new RegExp('(^|\\s)'+esc2(w)+'(\\s|$)','gi'), ' ');
+    if (/[A-Za-z]$/.test(w)) s = s.replace(new RegExp('\\b'+esc2(w)+'\\b','gi'), ' ');   /* also strip glued words like “10am” leftovers */
+  });
+  s = s.replace(/\b\d{1,2}(st|nd|rd|th)\b/gi,' ').replace(/[،,;:]+/g,' ').replace(/\s+/g,' ').trim();
+  return s.replace(/^[-–—·]+|[-–—·]+$/g,'').trim();
+}
+function buildDraft(t, ref){
+  const d = extractDate(t, ref), tm = extractTime(t), ct = extractContact(t), lo = extractLocation(t), ph = extractPhone(t);
+  const remove = d.matched.concat(tm.matched).concat([ct.matched, lo.matched, ph||'']);
+  let title = cleanTitle(t, remove);
+  if (!title || /^(appointment|meeting|schedule|சந்திப்பு)$/i.test(title)){
+    title = ct.contact ? (ct.contact + ' appointment') : 'Appointment';
+  }
+  return { title:cap(title), contact:ct.contact, phone:ph||'', location:lo.loc,
+           date:d.date?fmtDate(d.date):'', time:tm.time||'', _hasDate:!!d.date, _hasTime:!!tm.time };
+}
+function parseCommand(text){
+  const t = (text||'').trim(); const low = t.toLowerCase();
+  if (!t) return {intent:'none'};
+  if (/(^|\s)(help|உதவி)(\s|$)/.test(low) || /what can you do/.test(low)) return {intent:'help'};
+  const draft = buildDraft(t, new Date());
+  const scheduling = !CMDWORDS.test(low) && (draft._hasTime || (draft._hasDate && draft.contact));
+  if (scheduling) return {intent:'create', draft:draft, confidence:1};
+  if (/(remind|நினைவூட்டு|நினைவூட்டல்|நினைவூட்டல்கள்)/.test(low)) return {intent:'listReminders'};
+  if (/(show|list|காட்டு|பார்|என்ன இருக்கு|சொல்லு)/.test(low) && /(சந்திப்ப|appointment|meeting|schedule|calendar)/.test(low)) return {intent:'list', when:'upcoming'};
+  if (/(my|என்)\s+(சந்திப்ப|appointment|appointments|schedule|calendar)/.test(low)) return {intent:'list', when:'upcoming'};
+  if (/(today|இன்று).*(சந்திப்ப|appointment|schedule|plan)/.test(low)) return {intent:'list', when:'today'};
+  if (/(tomorrow|நாளை).*(சந்திப்ப|appointment|schedule|plan)/.test(low)) return {intent:'list', when:'tomorrow'};
+  if (/(confirm|call|அழை|உறுதி)/.test(low) && /(next|அடுத்த)/.test(low)) return {intent:'callNext'};
+  if (/(confirm|call|அழை|உறுதி)/.test(low)){
+    return {intent:'callMatch', needle: t.replace(/(confirm|call|calling|ring|அழை|அழைத்து|உறுதிப்படுத்து|உறுதி|please|தயவுசெய்து|the|my|appointment|சந்திப்பு)/gi,' ').replace(/\s+/g,' ').trim()};
+  }
+  if (/(cancel|ரத்து)/.test(low)){
+    return {intent:'cancelMatch', needle: t.replace(/(cancel|ரத்து|செய்|செய்யுங்கள்|சந்திப்பை|appointment|சந்திப்பு|the|my)/gi,' ').replace(/\s+/g,' ').trim()};
+  }
+  if (draft._hasDate || draft._hasTime || draft.contact) return {intent:'create', draft:draft, confidence:1};
+  return {intent:'unknown'};
+}
+
+/* ---------- chat ---------- */
+function pushMsg(role, taLine, enLine, opts){
+  opts = opts||{};
+  const chat = $('#chat');
+  const el = document.createElement('div'); el.className = 'msg '+role;
+  const primary = role==='arivu' ? (enLine || taLine) : taLine;
+  const spoken  = role==='arivu' && enLine && taLine && taLine!==enLine ? taLine : '';
+  el.innerHTML = '<div class="av">'+(role==='arivu'?'அ':'You')+'</div><div class="bubble">'+
+    '<div class="say">'+primary+'</div>'+
+    (spoken ? '<div class="spoken"><b>🎙 SPOKEN IN TAMIL</b><div class="ta">'+esc(spoken)+'</div></div>' : '') +
+    (opts.card ? '<div class="tools">'+opts.card+'</div>' : '') + '</div>';
+  chat.appendChild(el); chat.scrollTop = chat.scrollHeight;
+  if (role==='arivu' && opts.clip) say(opts.clip);
+  else if (role==='arivu' && opts.tts && spoken) speakTamilIfPossible(spoken);
+  return el;
+}
+function draftCard(d){
+  const id = 'draft_'+uid();
+  window.__drafts = window.__drafts || {};
+  window.__drafts[id] = d;
+  const dd = d.date ? new Date(d.date+'T00:00:00') : null;
+  return '<div class="field" style="min-width:220px;margin:0 0 6px">'+
+    '<div class="muted" style="font-size:11.5px">Arivu understood</div>'+
+    '<div style="font-size:13.5px;margin-top:2px">'+
+      '<b>'+esc(d.title||'Appointment')+'</b>'+
+      (d.contact?('<br>👤 '+esc(d.contact)):'')+(d.phone?(' · 📱 '+esc(d.phone)):'')+
+      '<br>📅 '+(dd?esc(enDate(dd))+' <span class="muted">('+esc(relDay(dd))+')</span>':'<span class="err">no date</span>')+
+      '<br>⏰ '+(d.time?esc(d.time):'<span class="err">no time</span>')+
+      (d.location?('<br>📍 '+esc(d.location)):'')+
+    '</div></div>'+
+    '<button class="btn sm primary" onclick="acceptDraft(\''+id+'\')">✔ Add it</button>'+
+    '<button class="btn sm" onclick="editDraft(\''+id+'\')">✎ Edit</button>'+
+    '<button class="btn sm ghost" onclick="dropDraft(\''+id+'\')">✕ Discard</button>';
+}
+function acceptDraft(id){
+  const d = (window.__drafts||{})[id]; if(!d) return;
+  if (!d.date) d.date = fmtDate(new Date());
+  if (!d.time) d.time = '10:00';
+  const a = mkAppt(d); S.appointments.push(a); save();
+  pushMsg('arivu','Added <b>'+esc(a.title)+'</b> — '+esc(enDate(parseDT(a.date,a.time)))+' at '+esc(a.time)+'. I will remind you and offer the confirmation call.',
+    'சரி, சந்திப்பு சேர்க்கப்பட்டது. நினைவூட்டல் அமைக்கப்பட்டது.',
+    {clip:'appt_added', card:'<button class="btn sm teal" onclick="startCall(\''+a.id+'\',\'confirm\')">📞 Confirm now</button>'});
+  delete window.__drafts[id]; renderAll();
+}
+function editDraft(id){ const d=(window.__drafts||{})[id]; if(d) openApptModal(Object.assign({},d)); }
+function dropDraft(id){ delete (window.__drafts||{})[id]; pushMsg('arivu','Okay, discarded — nothing was saved.','சரி, சேர்க்கவில்லை. வேறு ஏதாவது சொல்லுங்கள்.'); }
+function mkAppt(d){
+  const dt = parseDT(d.date, d.time);
+  const a = { id:uid(), title:d.title||'Appointment', contact:d.contact||'', phone:d.phone||'', location:d.location||'',
+    date:d.date, time:d.time, durationMin:Number(d.durationMin)||30, notes:d.notes||'', status:d.status||'pending',
+    confirmAt:d.confirmAt||'', reminderAt:d.reminderAt||'', reminderDone:false, created:new Date().toISOString(), calls:[] };
+  if (!a.confirmAt){ const c = new Date(dt); c.setDate(c.getDate()-1); c.setHours(9,0,0,0); if (c > new Date()) a.confirmAt = isoLocal(c); }
+  if (!a.reminderAt){ const r = new Date(dt.getTime()-3600000); if (r > new Date()) a.reminderAt = isoLocal(r); }
+  return a;
+}
+function assistantHandle(text){
+  pushMsg('me', esc(text), '');
+  const cmd = parseCommand(text);
+  if (cmd.intent==='none') return;
+  if (cmd.intent==='help'){
+    return pushMsg('arivu','I can add appointments, list them, place confirmation calls and set reminders. Try: “Dentist tomorrow 10am” or “confirm my next meeting”.',
+      'நான் செய்யக்கூடியவை: சந்திப்பு சேர்த்தல், பட்டியல், உறுதி அழைப்பு, நினைவூட்டல்.');
+  }
+  if (cmd.intent==='list'){
+    const list = S.appointments.filter(a=>a.status!=='cancelled').sort(byDT);
+    let f = list;
+    if (cmd.when==='today') f = list.filter(a=>dayDiff(parseDT(a.date,a.time), new Date())===0);
+    if (cmd.when==='tomorrow') f = list.filter(a=>dayDiff(parseDT(a.date,a.time), new Date())===1);
+    if (!f.length) return pushMsg('arivu','No appointments there. Want to add one?','அந்த நாட்களில் சந்திப்புகள் இல்லை. புதியதைச் சேர்க்கவா?');
+    const lines = f.slice(0,6).map(a=>'• '+esc(a.title)+' — '+esc(relDay(parseDT(a.date,a.time)))+' '+esc(a.time)+' '+statusBadge(a.status)).join('<br>');
+    return pushMsg('arivu','Here are your appointments:<br>'+lines, 'உங்கள் சந்திப்புகள் இவை.', {tts:true});
+  }
+  if (cmd.intent==='listReminders'){
+    const r = S.appointments.filter(a=>a.reminderAt && !a.reminderDone).sort(byDT);
+    if (!r.length) return pushMsg('arivu','No reminders pending.','தற்போதைக்கு நினைவூட்டல்கள் இல்லை.');
+    return pushMsg('arivu','Upcoming reminders:<br>'+r.map(a=>'• '+esc(a.title)+' — '+esc(niceDT(a.reminderAt))).join('<br>'), 'நினைவூட்டல்கள்.', {tts:true});
+  }
+  if (cmd.intent==='callNext'){
+    const a = S.appointments.filter(x=>x.status==='pending').sort(byDT)[0];
+    if (!a) return pushMsg('arivu','Nothing is waiting for confirmation.','உறுதிப்படுத்த வேண்டிய சந்திப்புகள் இல்லை.');
+    pushMsg('arivu','Calling <b>'+esc(a.contact||a.title)+'</b> to confirm <b>'+esc(a.title)+'</b> ('+esc(relDay(parseDT(a.date,a.time)))+' '+esc(a.time)+')…',
+      'சரி — உறுதிப்படுத்த அழைக்கிறேன்.', {card:'<button class="btn sm teal" onclick="startCall(\''+a.id+'\',\'confirm\')">📞 Open call screen</button>'});
+    setTimeout(()=>startCall(a.id,'confirm'), 900);
+    return;
+  }
+  if (cmd.intent==='callMatch'){
+    const n = (cmd.needle||'').toLowerCase();
+    let a = S.appointments.filter(x=>x.status!=='cancelled').sort(byDT)[0];
+    if (n){ const hit = S.appointments.filter(x=>((x.title+' '+x.contact).toLowerCase().indexOf(n)>=0) || (n && x.contact && n.indexOf(x.contact.toLowerCase())>=0)); if (hit.length) a = hit[0]; }
+    if (!a) return pushMsg('arivu','I could not tell which appointment you meant.','எந்தச் சந்திப்பு என்று தெரியவில்லை.');
+    pushMsg('arivu','Starting the confirmation call for <b>'+esc(a.contact||a.title)+'</b>…','அழைப்பைத் தொடங்குகிறேன்…',
+      {card:'<button class="btn sm teal" onclick="startCall(\''+a.id+'\',\'confirm\')">📞 Open call screen</button>'});
+    setTimeout(()=>startCall(a.id,'confirm'), 800);
+    return;
+  }
+  if (cmd.intent==='cancelMatch'){
+    const n = (cmd.needle||'').toLowerCase();
+    let cands = S.appointments.filter(x=>x.status!=='cancelled').sort(byDT);
+    if (n){ const hit = cands.filter(x=>(x.title+' '+x.contact).toLowerCase().indexOf(n)>=0); if (hit.length) cands = hit; }
+    const a = cands[0];
+    if (!a) return pushMsg('arivu','I could not tell which appointment to cancel.','எதை ரத்து செய்ய வேண்டும் என்று தெரியவில்லை.');
+    return pushMsg('arivu','Cancel <b>'+esc(a.title)+'</b> — '+esc(enDate(parseDT(a.date,a.time)))+' '+esc(a.time)+'?','இதை ரத்து செய்யவா?',
+      {card:'<button class="btn sm danger" onclick="cancelApptConfirm(\''+a.id+'\')">❌ Yes, cancel it</button><button class="btn sm ghost" onclick="nvmCancel()">Keep it</button>'});
+  }
+  if (cmd.intent==='create'){
+    const d = cmd.draft;
+    if (!d._hasDate && !d._hasTime){
+      return pushMsg('arivu','I caught that, but not a date or time. Try: “Dentist tomorrow 10am” or “நாளை காலை 10 மணிக்கு டாக்டர் சந்திப்பு”.',
+        'தேதி அல்லது நேரம் தெளிவாக இல்லை.');
+    }
+    return pushMsg('arivu','Shall I add this?','இதைச் சேர்க்கவா?', {card:draftCard(d)});
+  }
+  pushMsg('arivu','I did not quite get that — try “Dentist tomorrow 10am”, “show my appointments” or “confirm my next meeting”.',
+    'இதை என்னால் புரிந்துகொள்ள முடியவில்லை — மீண்டும் சொல்லுங்கள்.');
+}
+
+/* ============================================================
+   APPOINTMENTS UI
+   ============================================================ */
+function byDT(a,b){ return parseDT(a.date,a.time) - parseDT(b.date,b.time); }
+const STATUS_EN = {pending:'🕓 Pending', confirmed:'✅ Confirmed', cancelled:'❌ Cancelled', rescheduled:'🔁 Rescheduled', awaiting:'📵 Awaiting reply'};
+function statusText(s){ return STATUS_EN[s]||s; }
+function statusBadge(s){ return '<span class="badge b-'+s+'">'+statusText(s)+'</span>'; }
+function apptCard(a){
+  const dt = parseDT(a.date,a.time);
+  const wd = dt.toLocaleDateString('en-GB',{weekday:'short'});
+  const overdue = a.status==='pending' && a.confirmAt && fromIsoLocal(a.confirmAt) <= new Date();
+  return '<div class="appt" id="appt-'+a.id+'">'+
+    '<div class="datebox"><div class="d">'+P(dt.getDate())+'</div><div class="m">'+dt.toLocaleDateString('en-GB',{month:'short'})+'</div><div class="w">'+wd+'</div></div>'+
+    '<div class="body">'+
+      '<div class="title">'+esc(a.title)+' '+statusBadge(a.status)+(a.sample?' <span class="tag">sample</span>':'')+'</div>'+
+      '<div class="meta"><span>⏰ '+esc(a.time)+' · '+durText(a.durationMin)+'</span><span>📅 '+esc(relDay(dt))+' ('+esc(enDate(dt))+')</span>'+
+        (a.contact?'<span>👤 '+esc(a.contact)+'</span>':'')+(a.phone?'<span>📱 '+esc(a.phone)+'</span>':'')+(a.location?'<span>📍 '+esc(a.location)+'</span>':'')+'</div>'+
+      (a.confirmAt?('<div class="tr muted" style="font-size:11.5px">📞 Confirm call: '+esc(niceDT(a.confirmAt))+(overdue?' <span class="err">— due now!</span>':'')+'</div>'):'')+
+      (a.reminderAt&&!a.reminderDone?('<div class="tr muted" style="font-size:11.5px">🔔 Reminder: '+esc(niceDT(a.reminderAt))+'</div>'):'')+
+      (a.notes?'<div class="muted" style="font-size:12px;margin-top:3px">📝 '+esc(a.notes)+'</div>':'')+
+      '<div class="acts">'+
+        '<button class="btn sm teal" onclick="startCall(\''+a.id+'\',\'confirm\')">📞 Confirm call</button>'+
+        '<button class="btn sm" onclick="startCall(\''+a.id+'\',\'reminder\')">🔔 Remind</button>'+
+        (a.status==='pending'?'<button class="btn sm" onclick="markConfirmed(\''+a.id+'\')">✔ Confirmed</button>':'')+
+        '<button class="btn sm ghost" onclick="editAppt(\''+a.id+'\')">✎ Edit</button>'+
+        '<button class="btn sm ghost" onclick="exportIcsOne(\''+a.id+'\')">⤓ .ics</button>'+
+        '<button class="btn sm ghost danger" onclick="delAppt(\''+a.id+'\')">🗑</button>'+
+      '</div></div></div>';
+}
+function markConfirmed(id){ const a=S.appointments.find(x=>x.id===id); if(!a) return; a.status='confirmed'; save(); renderAll(); toast('✅ '+esc(a.title)+' confirmed','உறுதிப்படுத்தப்பட்டது'); }
+function cancelApptConfirm(id){
+  const a=S.appointments.find(x=>x.id===id); if(!a) return;
+  a.status='cancelled'; a.reminderDone=true; save(); renderAll();
+  pushMsg('arivu','Okay — <b>'+esc(a.title)+'</b> is cancelled.','சரி, சந்திப்பு ரத்து செய்யப்பட்டது.', {clip:'call_cancel'});
+  toast('❌ Cancelled','ரத்து செய்யப்பட்டது');
+}
+function nvmCancel(){ pushMsg('arivu','Okay, nothing cancelled — kept as is.','சரி, ரத்து செய்யவில்லை.'); }
+function delAppt(id){
+  const a=S.appointments.find(x=>x.id===id); if(!a) return;
+  if(!confirm('Delete “'+a.title+'”?')) return;
+  S.appointments=S.appointments.filter(x=>x.id!==id); save(); renderAll();
+}
+function editAppt(id){ const a=S.appointments.find(x=>x.id===id); if(a) openApptModal(a); }
+
+function renderAppts(){
+  const q = ($('#search').value||'').toLowerCase(), st = $('#filterStatus').value;
+  let list = S.appointments.slice().sort(byDT);
+  if (q) list = list.filter(a=>((a.title+' '+a.contact+' '+a.location+' '+a.notes).toLowerCase().indexOf(q)>=0));
+  if (st) list = list.filter(a=>a.status===st);
+  const now = new Date();
+  const isFuture = a => parseDT(a.date,a.time) >= new Date(now.getTime()-3600000) && a.status!=='cancelled';
+  const upcoming = list.filter(isFuture);
+  const past = list.filter(a=>!isFuture(a)).reverse();
+  $('#upcoming').innerHTML = upcoming.length ? upcoming.map(apptCard).join('') : '<div class="empty"><span class="big">🗓</span>Nothing upcoming yet.<br>Tap “＋ New” or just tell Arivu.</div>';
+  $('#past').innerHTML = past.length ? past.slice(0,20).map(apptCard).join('') : '<div class="empty">—</div>';
+}
+function renderToday(){
+  const now = new Date();
+  $('#todayDate').textContent = enFull(now);
+  const today = S.appointments.filter(a=>dayDiff(parseDT(a.date,a.time), now)===0 && a.status!=='cancelled').sort(byDT);
+  $('#todayList').innerHTML = today.length ? today.map(apptCard).join('') : '<div class="empty"><span class="big">☕</span>Nothing scheduled today.</div>';
+  const upc = S.appointments.filter(a=>a.status!=='cancelled' && parseDT(a.date,a.time) >= now).sort(byDT);
+  if (!upc.length){ $('#nextBox').innerHTML = '<div class="empty">—</div>'; }
+  else {
+    const a = upc[0], d = parseDT(a.date,a.time), mins = Math.round((d-now)/60000);
+    const when = mins<0 ? 'now' : (mins<60 ? 'in '+mins+' min' : (mins<1440 ? 'in '+Math.round(mins/60)+' h' : 'in '+Math.round(mins/1440)+' days'));
+    $('#nextBox').innerHTML = apptCard(a) + '<div class="muted" style="font-size:12.5px">⏳ Starts '+esc(when)+' · '+esc(enDate(d))+'</div>';
+  }
+  const pend = S.appointments.filter(a=>a.status==='pending').length;
+  const conf = S.appointments.filter(a=>a.status==='confirmed').length;
+  const due = S.appointments.filter(a=>a.status==='pending'&&a.confirmAt&&fromIsoLocal(a.confirmAt)<=now).length;
+  $('#kpis').innerHTML = '<div class="k"><b>'+pend+'</b><span>Pending confirmation</span></div>'+
+    '<div class="k"><b>'+conf+'</b><span>Confirmed</span></div>'+
+    '<div class="k"><b>'+due+'</b><span>Calls due now</span></div>';
+  const rem = S.appointments.filter(a=>a.reminderAt && !a.reminderDone).sort((x,y)=>fromIsoLocal(x.reminderAt)-fromIsoLocal(y.reminderAt));
+  $('#reminderList').innerHTML = rem.length ? rem.map(a=>'<div style="margin-bottom:6px">🔔 <b>'+esc(a.title)+'</b><div class="muted" style="font-size:11.5px">'+esc(niceDT(a.reminderAt))+'</div></div>').join('') : '<span class="muted">No reminders pending.</span>';
+  const dueList = S.appointments.filter(a=>a.status==='pending'&&a.confirmAt&&fromIsoLocal(a.confirmAt)<=now);
+  $('#dueBanner').innerHTML = dueList.length ? dueList.map(a=>'<div class="banner"><span style="font-size:20px">📞</span><div class="txt"><b>'+esc(a.title)+'</b> — time to confirm with '+esc(a.contact||'the contact')+(a.phone?(' · '+esc(a.phone)):'')+'.</div><button class="btn sm teal" onclick="startCall(\''+a.id+'\',\'confirm\')">Call now</button></div>').join('') : '';
+  const nextDue = S.appointments.filter(a=>a.status==='pending'&&a.confirmAt&&fromIsoLocal(a.confirmAt)>now).sort((x,y)=>fromIsoLocal(x.confirmAt)-fromIsoLocal(y.confirmAt))[0];
+  $('#nextDue').innerHTML = nextDue ? '⏭ Next automatic call: <b>'+esc(nextDue.title)+'</b> — '+esc(niceDT(nextDue.confirmAt)) : (S.settings.autoCall ? 'No automatic calls queued.' : '');
+}
+function renderCalls(){
+  const list = S.callLog.slice().reverse();
+  $('#callLogList').innerHTML = list.length ? list.map(c=>{
+    const oc = {confirmed:'b-confirmed',cancelled:'b-cancelled',rescheduled:'b-rescheduled',awaiting:'b-awaiting',reminded:'b-confirmed',ended:'b-pending'}[c.outcome]||'b-pending';
+    const ocm = {confirmed:'✅ Confirmed',cancelled:'❌ Cancelled',rescheduled:'🔁 Rescheduled',awaiting:'📵 Voicemail left',reminded:'🔔 Reminded',ended:'Ended'}[c.outcome]||c.outcome;
+    return '<div class="log"><div class="h"><b>'+esc(c.contact||c.title)+'</b><span class="badge '+oc+'">'+ocm+'</span>'+
+      '<span class="spacer"></span><span class="muted" style="font-size:11.5px">'+esc(new Date(c.startedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}))+' · '+c.durationSec+'s · '+(c.kind==='reminder'?'reminder call':'confirmation call')+'</span></div>'+
+      '<div class="muted" style="font-size:11.5px;margin-top:4px">'+esc(c.title)+' — '+esc(c.whenText||'')+(c.phone?(' · '+esc(c.phone)):'')+'</div>'+
+      '<details class="faq" style="margin-top:7px"><summary>📄 Transcript</summary>'+
+        (c.transcript||[]).map(l=>{
+          const who = l.who==='arivu' ? 'Arivu' : (l.who==='them' ? 'Other side' : 'System');
+          const col = l.who==='arivu' ? '#f4c05a' : (l.who==='them' ? '#35d6bd' : '#98a6c9');
+          return '<p style="margin:6px 0"><b style="color:'+col+'">'+who+':</b> '+(l.en||l.ta)+
+                 (l.en&&l.ta&&l.ta!==l.en?('<br><span class="ta" style="color:#98a6c9;font-size:12px">🎙 '+esc(l.ta)+'</span>'):'')+'</p>';
+        }).join('')+
+      '</details></div>';
+  }).join('') : '<div class="empty"><span class="big">📞</span>No calls yet.<br>Try one from Today, or the quick demo.</div>';
+}
+function renderAll(){ renderToday(); renderAppts(); renderCalls(); }
+function toast(en, ta){
+  const d = document.createElement('div'); d.className='toast';
+  d.innerHTML = '<div>'+en+'</div>'+(ta?'<div class="spoken"><b>🎙</b> <span class="ta">'+esc(ta)+'</span></div>':'');
+  $('#toasts').appendChild(d);
+  setTimeout(()=>{ d.style.opacity='0'; d.style.transform='translateY(6px)'; d.style.transition='.4s'; }, 6000);
+  setTimeout(()=>d.remove(), 6600);
+}
+
+/* ---------- appointment sheet ---------- */
+function openApptModal(a){
+  a = a||{};
+  $('#apptModalTitle').textContent = a.id ? 'Edit appointment' : 'New appointment';
+  $('#fId').value=a.id||''; $('#fTitle').value=a.title||''; $('#fContact').value=a.contact||''; $('#fPhone').value=a.phone||'';
+  $('#fDate').value=a.date||fmtDate(new Date()); $('#fTime').value=a.time||'10:00'; $('#fDur').value=a.durationMin||30;
+  $('#fLoc').value=a.location||''; $('#fConfirm').value=a.confirmAt||''; $('#fRemind').value=a.reminderAt||'';
+  $('#fStatus').value=a.status||'pending'; $('#fNotes').value=a.notes||'';
+  $('#apptModal').classList.add('on');
+}
+function closeApptModal(){ $('#apptModal').classList.remove('on'); }
+function saveAppt(){
+  const id = $('#fId').value;
+  const d = { title:($('#fTitle').value.trim()||'Appointment'), contact:$('#fContact').value.trim(), phone:$('#fPhone').value.trim(),
+    date:$('#fDate').value, time:$('#fTime').value, durationMin:Number($('#fDur').value)||30, location:$('#fLoc').value.trim(),
+    confirmAt:$('#fConfirm').value, reminderAt:$('#fRemind').value, status:$('#fStatus').value, notes:$('#fNotes').value.trim() };
+  if (!d.date || !d.time){ alert('Date and time are required.'); return; }
+  if (id){ const a=S.appointments.find(x=>x.id===id); Object.assign(a,d); }
+  else S.appointments.push(Object.assign({id:uid(),reminderDone:false,created:new Date().toISOString(),calls:[]}, d));
+  save(); closeApptModal(); renderAll();
+  toast((id?'✎ Saved: ':'✅ Added: ')+esc(d.title), id?'புதுப்பிக்கப்பட்டது':'சேர்க்கப்பட்டது');
+}
+
+/* ---------- export ---------- */
+function icsFor(a){
+  const s = parseDT(a.date,a.time), e = new Date(s.getTime()+(Number(a.durationMin)||30)*60000);
+  const z = d => d.getFullYear()+P(d.getMonth()+1)+P(d.getDate())+'T'+P(d.getHours())+P(d.getMinutes())+'00';
+  const fold = t => String(t).replace(/([,;\\])/g,'\\$1').replace(/\n/g,'\\n');
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Arivu//Personal Assistant//EN','CALSCALE:GREGORIAN','BEGIN:VEVENT',
+    'UID:'+a.id+'@arivu','DTSTAMP:'+z(new Date()),'DTSTART:'+z(s),'DTEND:'+z(e),'SUMMARY:'+fold(a.title),
+    a.location?('LOCATION:'+fold(a.location)):'',
+    'DESCRIPTION:'+fold([a.contact?('Contact: '+a.contact):'', a.phone?('Phone: '+a.phone):'', 'Status: '+a.status, a.notes||''].filter(Boolean).join('\n')),
+    'END:VEVENT','END:VCALENDAR'].filter(Boolean).join('\r\n');
+}
+function downloadText(name, text, mime){
+  try{
+    const blob = new Blob([text],{type:mime||'text/plain'});
+    const url = URL.createObjectURL(blob); const a=document.createElement('a');
+    a.href=url; a.download=name; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 600);
+    return true;
+  }catch(e){ return false; }
+}
+function showTextModal(title, text, note){
+  $('#textModalTitle').textContent = title;
+  $('#textModalBody').innerHTML = (note?'<div class="muted" style="margin-bottom:8px;font-size:12.5px">'+note+'</div>':'')+
+    '<textarea id="tmArea" style="height:210px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px"></textarea>'+
+    '<div class="row" style="margin-top:9px"><button class="btn sm" id="tmCopy">📋 Copy</button><button class="btn sm" id="tmDl">⤓ Download</button></div>';
+  $('#tmArea').value = text;
+  $('#tmCopy').onclick = ()=>{ const ta=$('#tmArea'); ta.select(); ta.setSelectionRange(0,99999);
+    try{ document.execCommand('copy'); }catch(e){}
+    try{ navigator.clipboard && navigator.clipboard.writeText(ta.value); }catch(e){}
+    toast('📋 Copied to clipboard'); };
+  $('#tmDl').onclick = ()=>{ const ok=downloadText(title.replace(/[^\w.-]+/g,'_')+'.txt', text);
+    toast(ok?'⤓ Download started':'⚠️ Download blocked here — use Copy instead'); };
+  $('#textModal').classList.add('on');
+}
+function exportIcsOne(id){
+  const a=S.appointments.find(x=>x.id===id); if(!a) return;
+  const txt = icsFor(a);
+  const ok = downloadText((a.title||'appointment').replace(/[^\w]+/g,'_')+'.ics', txt, 'text/calendar');
+  if (!ok) showTextModal('.ics — '+a.title, txt, 'Downloads can be blocked in a preview window — copy this text into a file ending in .ics instead.');
+  else toast('⤓ .ics downloaded — open it to add to your calendar');
+}
+function exportIcsAll(){
+  const list = S.appointments.filter(a=>a.status!=='cancelled').sort(byDT);
+  const txt = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Arivu//Personal Assistant//EN']
+    .concat(list.map(a=>icsFor(a).split('\r\n').slice(4,-1))).concat(['END:VCALENDAR']).join('\r\n');
+  const ok = downloadText('arivu-appointments.ics', txt, 'text/calendar');
+  if (!ok) showTextModal('arivu-appointments.ics', txt, 'Copy this text into a file ending in .ics to import it.');
+  else toast('⤓ Calendar file downloaded ('+list.length+' events)');
+}
+
+/* ============================================================
+   CALL ENGINE
+   ============================================================ */
+let call=null, callTick=null;
+function say2(who, en, ta){
+  if (call) call.transcript.push({who:who, en:en||'', ta:ta||''});
+  const box = $('#cTrans');
+  const el = document.createElement('div');
+  el.className = 'line '+(who==='them'?'them':'')+(who==='system'?'sys':'');
+  const lbl = who==='arivu' ? 'Arivu' : (who==='them' ? 'Other side' : 'Status');
+  el.innerHTML = '<div class="who">'+lbl+'</div><div class="say">'+esc(en||ta)+'</div>'+
+    (ta && en ? '<div class="spoken"><b>🎙 TAMIL</b><div class="ta">'+esc(ta)+'</div></div>' : '');
+  box.appendChild(el); box.scrollTop = box.scrollHeight;
+}
+function setStat(t){ $('#cStat').textContent = t; }
+function wave(on){ $('#cWave').classList.toggle('on', !!on); }
+async function arivuLine(key){
+  const t = CLIP_TEXT[key]; if(!t) return;
+  say2('arivu', t.en, t.ta);
+  wave(true);
+  if (CLIPS[key]) await playClip(key); else await speakTamilIfPossible(t.ta);
+  wave(false);
+}
+function readDetails(a){
+  const mode = S.settings.detailRead;
+  const d = parseDT(a.date,a.time);
+  const taLine = a.title + ', ' + taDate(d) + ', ' + a.time + (a.location?(', '+a.location):'');
+  const enLine = a.title+' — '+enDate(d)+' at '+a.time+(a.location?(', '+a.location):'');
+  say2('arivu', enLine, taLine);
+  const canTa = (taVoice || S.settings.voiceURI);
+  if (mode!=='off' && canTa) return speakText(taLine, {lang:'ta-IN'});
+  beep(660,.12);
+  return new Promise(r=>setTimeout(r, 700));
+}
+function replyButtons(defs){
+  const box = $('#cReplies'); box.innerHTML=''; box.className='creplies';
+  defs.forEach(d=>{
+    const b=document.createElement('button'); b.className='btn '+(d.cls||''); b.textContent=d.label;
+    b.onclick=()=>{ box.className='creplies off'; box.innerHTML=''; d.act(); };
+    box.appendChild(b);
+  });
+}
+function updateCallHeader(a){
+  const initials = (a.contact||a.title||'?').split(/\s+/).map(s=>s[0]).join('').slice(0,2).toUpperCase();
+  $('#cAvatar').textContent = initials;
+  $('#cName').textContent = a.contact || a.title;
+  $('#cNum').textContent = a.phone || '—';
+  const d = parseDT(a.date,a.time);
+  $('#cDetails').className='cdetails on';
+  $('#cDetails').innerHTML = '<div class="t">'+esc(a.title)+'</div>'+
+    '<div class="l">📅 '+esc(enDate(d))+' · ⏰ '+esc(a.time)+' · '+durText(a.durationMin)+(a.location?(' · 📍 '+esc(a.location)):'')+'</div>'+
+    '<div class="l">📞 '+esc(S.profile.name ? ('Calling on behalf of '+S.profile.name) : 'Calling on your behalf')+'</div>';
+}
+function callTimerStart(){
+  const t0 = Date.now();
+  callTick = setInterval(()=>{
+    const s = Math.floor((Date.now()-t0)/1000);
+    $('#cTimer').textContent = P(Math.floor(s/60))+':'+P(s%60);
+  }, 500);
+}
+function callTimerStop(){ if(callTick) clearInterval(callTick); callTick=null; }
+
+async function startCall(apptId, kind){
+  const a = S.appointments.find(x=>x.id===apptId); if(!a) return;
+  unlockAudio(); stopAudio();
+  call = { id:uid(), apptId:a.id, kind:kind||'confirm', startedAt:new Date(), ended:false, outcome:null,
+           transcript:[], title:a.title, contact:a.contact, phone:a.phone, whenText:enDate(parseDT(a.date,a.time))+' '+a.time };
+  const my = call.id;
+  $('#callOverlay').classList.add('on');
+  $('#cTrans').innerHTML=''; $('#cReplies').innerHTML=''; $('#cReplies').className='creplies off';
+  $('#cDetails').className='cdetails off'; $('#cTimer').textContent='00:00'; $('#cWave').className='wave';
+  const initials = (a.contact||a.title||'?').split(/\s+/).map(s=>s[0]).join('').slice(0,2).toUpperCase();
+  $('#cAvatar').textContent = initials; $('#cAvatar').className='cavatar speaking';
+  $('#cName').textContent = a.contact || a.title; $('#cNum').textContent = a.phone || '—';
+  setStat(kind==='reminder' ? 'Calling… (reminder call)' : 'Calling…');
+  startRing();
+  $('#cActions').innerHTML = '<button class="btn teal" id="cAns">📲 Answer</button>'+
+    '<button class="btn" id="cNo">📵 No answer</button><button class="btn danger" id="cEnd">✕ End</button>';
+  $('#cAns').onclick = ()=>answerCall();
+  $('#cNo').onclick = ()=>noAnswer();
+  $('#cEnd').onclick = ()=>endCall();
+  call.autoTimer = setTimeout(()=>{ if (call && call.id===my && !call.answeredAt && !call.ended) answerCall(); }, 5200);
+}
+function alive(my){ return call && call.id===my && !call.ended; }
+
+async function answerCall(){
+  if (!call || call.ended || call.answeredAt) return;
+  const my = call.id;
+  clearTimeout(call.autoTimer);
+  stopRing(); beep(880,.14);
+  call.answeredAt = new Date();
+  $('#cAvatar').className='cavatar';
+  setStat('Connected');
+  callTimerStart();
+  $('#cActions').innerHTML = '<button class="btn danger" id="cEnd2">✕ End call</button>';
+  $('#cEnd2').onclick = ()=>endCall();
+  const a = S.appointments.find(x=>x.id===call.apptId);
+  updateCallHeader(a);
+  await new Promise(r=>setTimeout(r,500)); if (!alive(my)) return;
+
+  if (call.kind==='reminder'){
+    say2('them','Hello, yes?','வணக்கம், சொல்லுங்கள்.');
+    await new Promise(r=>setTimeout(r,600)); if (!alive(my)) return;
+    await arivuLine('call_reminder'); if (!alive(my)) return;
+    await readDetails(a); if (!alive(my)) return;
+    replyButtons([
+      {label:'👍 Got it', cls:'teal', act:()=>finish(a,'reminded','Reminder acknowledged','சரி, நினைவில் வைக்கிறேன்.')},
+      {label:'⏰ In 10 minutes', act:()=>snoozeFromCall(a)}
+    ]);
+    return;
+  }
+  say2('them','Hello, who is speaking?','வணக்கம், யார் பேசுகிறீர்கள்?');
+  await new Promise(r=>setTimeout(r,600)); if (!alive(my)) return;
+  await arivuLine('call_hello'); if (!alive(my)) return;
+  await new Promise(r=>setTimeout(r,300)); if (!alive(my)) return;
+  await arivuLine('call_ask'); if (!alive(my)) return;
+  await readDetails(a); if (!alive(my)) return;
+  setStat('Waiting for your reply…');
+  replyButtons([
+    {label:'✅ Yes, it works', cls:'teal', act:()=>handleReply(a,'yes')},
+    {label:'❌ No, cancel it', cls:'danger', act:()=>handleReply(a,'no')},
+    {label:'🔁 Another time', act:()=>handleReply(a,'resched')}
+  ]);
+  const again = document.createElement('button');
+  again.className='btn sm ghost'; again.textContent='🔁 Ask again';
+  again.onclick = ()=>{ if (call && !call.ended){ setStat('Repeating…'); arivuLine('call_ask'); } };
+  $('#cReplies').appendChild(again);
+}
+function noAnswer(){
+  if (!call || call.ended || call.answeredAt) return;
+  clearTimeout(call.autoTimer); stopRing();
+  setStat('No answer — leaving a voice message');
+  call.answeredAt = new Date(); callTimerStart();
+  $('#cActions').innerHTML = '<button class="btn" id="cEnd3">✕ End</button>';
+  $('#cEnd3').onclick = ()=>endCall();
+  say2('them','(voicemail — no answer)','(வாய்ஸ்மெயில்)');
+  const a = S.appointments.find(x=>x.id===call.apptId);
+  arivuLine('call_voicemail').then(()=>{
+    if (!call || call.ended) return;
+    if (a){ a.status='awaiting'; save(); renderAll(); }
+    finish(a,'awaiting','No answer — Arivu left a Tamil voice message','பதில் இல்லை — குரல் செய்தி விடப்பட்டது.');
+  });
+}
+function handleReply(a, kind){
+  const my = call && call.id;
+  if (!my) return;
+  if (kind==='yes'){
+    say2('them','Yes, it is confirmed. Thank you!','ஆம், உறுதி. நன்றி!');
+    setTimeout(async ()=>{
+      if (!alive(my)) return;
+      await arivuLine('call_yes'); if (!alive(my)) return;
+      a.status='confirmed'; save(); renderAll();
+      await arivuLine('call_bye'); if (!alive(my)) return;
+      finish(a,'confirmed','Appointment confirmed ✅','சந்திப்பு உறுதிப்படுத்தப்பட்டது.');
+    }, 450);
+  } else if (kind==='no'){
+    say2('them','No, please cancel it.','இல்லை, ரத்து செய்யுங்கள்.');
+    setTimeout(async ()=>{
+      if (!alive(my)) return;
+      await arivuLine('call_cancel'); if (!alive(my)) return;
+      a.status='cancelled'; save(); renderAll();
+      await arivuLine('call_bye'); if (!alive(my)) return;
+      finish(a,'cancelled','Appointment cancelled ❌','சந்திப்பு ரத்து செய்யப்பட்டது.');
+    }, 450);
+  } else {
+    say2('them','We need a different time.','வேறு நேரம் பார்க்கலாம்.');
+    setTimeout(async ()=>{
+      if (!alive(my)) return;
+      await arivuLine('call_resched'); if (!alive(my)) return;
+      setStat('Pick the new time');
+      const box = $('#cReplies'); box.className='creplies'; box.innerHTML='';
+      box.innerHTML = '<div style="width:100%;text-align:center">'+
+        '<div class="muted" style="margin-bottom:7px">New date &amp; time (Arivu will confirm it in Tamil)</div>'+
+        '<div class="row" style="justify-content:center">'+
+          '<input type="date" id="rshDate" value="'+a.date+'" style="width:auto">'+
+          '<input type="time" id="rshTime" value="'+a.time+'" style="width:auto">'+
+          '<button class="btn sm teal" id="rshGo">✔ Save</button></div></div>';
+      $('#rshGo').onclick = async ()=>{
+        const nd = $('#rshDate').value, nt = $('#rshTime').value;
+        if (!nd || !nt) return;
+        a.date=nd; a.time=nt; a.status='rescheduled'; a.reminderDone=false;
+        const r = new Date(parseDT(nd,nt).getTime()-3600000); if (r > new Date()) a.reminderAt = isoLocal(r);
+        save(); renderAll();
+        box.className='creplies off'; box.innerHTML='';
+        say2('them','Okay, that time works.','சரி, இந்த நேரம் வசதி.');
+        if (!alive(my)) return;
+        await arivuLine('call_bye'); if (!alive(my)) return;
+        finish(a,'rescheduled','Moved to '+esc(enDate(parseDT(nd,nt)))+' '+nt+' 🔁','புதிய நேரம் பதிவு செய்யப்பட்டது.');
+      };
+    }, 450);
+  }
+}
+function snoozeFromCall(a){
+  const d = new Date(Date.now()+10*60*1000);
+  say2('them','Remind me in 10 minutes.','10 நிமிடம் கழித்து நினைவூட்டுங்கள்.');
+  setTimeout(async ()=>{
+    if (!call || call.ended) return;
+    a.reminderAt = isoLocal(d); a.reminderDone=false; save(); renderAll();
+    finish(a,'reminded','Snoozed — Arivu will remind you again in 10 minutes','10 நிமிடத்தில் மீண்டும் நினைவூட்டுகிறேன்.');
+  }, 450);
+}
+function finish(a, outcome, enMsg, taMsg){
+  if (!call) return;
+  if (!call.answeredAt) call.answeredAt = call.startedAt;
+  const durationSec = Math.max(1, Math.round((new Date()-call.answeredAt)/1000));
+  call.outcome = outcome;
+  if (enMsg) toast(enMsg, taMsg);
+  const sum = {confirmed:'✅ Confirmed',cancelled:'❌ Cancelled',rescheduled:'🔁 New time saved',awaiting:'📵 Voicemail left',reminded:'🔔 Reminder delivered',ended:'Call ended'}[outcome]||outcome;
+  S.callLog.push({ id:call.id, apptId:a?a.id:'', title:call.title, contact:call.contact, phone:call.phone, kind:call.kind,
+    startedAt:call.startedAt.toISOString(), durationSec:durationSec, outcome:outcome, transcript:call.transcript.slice(), whenText:call.whenText });
+  if (S.callLog.length>200) S.callLog = S.callLog.slice(-200);
+  if (a){ a.calls = a.calls||[]; a.calls.push(call.id); }
+  save(); renderAll();
+  call.answeredAt = null;
+  setStat('');
+  $('#cReplies').className='creplies off'; $('#cReplies').innerHTML='';
+  $('#cActions').innerHTML = '<button class="btn primary" id="cClose">Done — close</button>';
+  $('#cClose').onclick = ()=>closeCall();
+  say2('system','Call ended · '+durationSec+'s · '+sum,'அழைப்பு முடிந்தது');
+}
+function endCall(){
+  if (!call || call.ended) return;
+  stopRing(); callTimerStop(); stopAudio(); wave(false);
+  if (call.outcome){ closeCall(); return; }
+  call.ended = true;
+  const a = S.appointments.find(x=>x.id===call.apptId);
+  finish(a,'ended','Call ended','அழைப்பு முடிந்தது');
+}
+function closeCall(){
+  stopRing(); callTimerStop(); stopAudio(); wave(false);
+  if (call) call.ended = true;
+  $('#callOverlay').classList.remove('on');
+  call = null;
+}
+
+/* ============================================================
+   AUTOMATION
+   ============================================================ */
+const prompted = new Set();
+function automationTick(){
+  const now = new Date();
+  S.appointments.forEach(a=>{
+    if (a.status==='pending' && a.confirmAt && !prompted.has('c'+a.id) && fromIsoLocal(a.confirmAt) <= now){
+      prompted.add('c'+a.id);
+      toast('📞 Time to confirm <b>'+esc(a.title)+'</b> with '+esc(a.contact||'the contact'),'உறுதிப்படுத்தும் நேரம் வந்துவிட்டது');
+      pushMsg('arivu','📞 It is time to confirm <b>'+esc(a.title)+'</b> — '+esc(enDate(parseDT(a.date,a.time)))+' at '+esc(a.time)+'. Call '+(a.contact?esc(a.contact):'the contact')+' now?',
+        'உறுதிப்படுத்த வேண்டிய நேரம் வந்துவிட்டது. அழைக்கவா?', {card:chipsForDue(a)});
+      if (S.settings.autoStart) setTimeout(()=>startCall(a.id,'confirm'), 1400);
+    }
+    if (a.reminderAt && !a.reminderDone && fromIsoLocal(a.reminderAt) <= now && !prompted.has('r'+a.id)){
+      prompted.add('r'+a.id); a.reminderDone = true; save();
+      const dd = parseDT(a.date,a.time);
+      toast('🔔 Reminder: <b>'+esc(a.title)+'</b> — '+esc(relDay(dd))+' at '+esc(a.time),'நினைவூட்டல்!');
+      beep(1040,.16); setTimeout(()=>beep(1320,.18), 200);
+      pushMsg('arivu','🔔 Reminder — <b>'+esc(a.title)+'</b> is '+esc(relDay(dd))+' at '+esc(a.time)+(a.location?(' · '+esc(a.location)):'')+'. Be ready!',
+        'நினைவூட்டல்! விரைவில் ஒரு சந்திப்பு உள்ளது. நன்றாக இருக்கட்டும்!',
+        {clip:'call_reminder', card:'<button class="btn sm" onclick="startCall(\''+a.id+'\',\'reminder\')">🔔 Open reminder call</button>'});
+      renderAll();
+    }
+  });
+}
+function snoozeCall(id){
+  const a = S.appointments.find(x=>x.id===id); if(!a) return;
+  a.confirmAt = isoLocal(new Date(Date.now()+3600000)); save(); renderAll();
+  toast('⏰ Will suggest the call again in 1 hour','ஒரு மணி நேரம் கழித்து நினைவூட்டுகிறேன்');
+}
+function chipsForDue(a){
+  return '<button class="btn sm teal" onclick="startCall(\''+a.id+'\',\'confirm\')">📞 Call now</button>'+
+         '<button class="btn sm ghost" onclick="snoozeCall(\''+a.id+'\')">⏰ In 1 hour</button>';
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function switchTab(name){
+  $$('#tabs button').forEach(b=>b.classList.toggle('on', b.dataset.tab===name));
+  $$('.tabpage').forEach(p=>p.classList.toggle('on', p.id==='page-'+name));
+  window.scrollTo(0,0);
+  if (name==='appts') renderAppts();
+  if (name==='calls') renderCalls();
+  if (name==='today') renderToday();
+}
+const EXAMPLES = [
+  'Dentist tomorrow 10am',
+  'வணிக சந்திப்பு நாளை மாலை 6 மணிக்கு',
+  'show my appointments',
+  'confirm my next meeting',
+  'friday 3pm meeting with Anna at Iso Omena'
+];
+function initChips(){
+  const c=$('#chips'); c.innerHTML='';
+  EXAMPLES.forEach(x=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=x;
+    b.onclick=()=>assistantHandle(x); c.appendChild(b); });
+}
+function bindMic(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const btn = $('#micBtn'), hint = $('#micHint');
+  if (!SR){
+    btn.style.opacity=.45;
+    hint.textContent='🎤 Voice input is not available in this browser (it works in Safari on iPhone and in Chrome). Type instead.';
+    btn.onclick = ()=>toast('🎤 Voice input not available here — please type');
+    return;
+  }
+  hint.textContent='🎤 Tap the microphone and speak — English or Tamil.';
+  let rec=null, on=false;
+  btn.onclick = ()=>{
+    try{
+      if (on){ rec && rec.stop(); return; }
+      rec = new SR(); rec.lang='ta-IN'; rec.interimResults=false; rec.maxAlternatives=1;
+      rec.onstart = ()=>{ on=true; btn.classList.add('rec'); toast('🎤 Listening…'); };
+      rec.onresult = e => { const txt = e.results[0][0].transcript; assistantHandle(txt); };
+      rec.onerror = e => { toast('🎤 '+(e.error||'could not hear that')+' — try again'); };
+      rec.onend = ()=>{ on=false; btn.classList.remove('rec'); };
+      rec.start();
+    }catch(e){ toast('🎤 Microphone unavailable'); }
+  };
+}
+function bindAll(){
+  $$('#tabs button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+  $('#sendBtn').onclick = ()=>{ const v=$('#chatInput').value.trim(); if(!v) return; $('#chatInput').value=''; assistantHandle(v); };
+  $('#chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter'){ const v=e.target.value.trim(); if(!v) return; e.target.value=''; assistantHandle(v); } });
+  $('#addApptBtn').onclick = ()=>openApptModal();
+  $('#quickAdd').onclick = ()=>openApptModal();
+  $('#apptClose').onclick = closeApptModal;
+  $('#apptCancelBtn').onclick = closeApptModal;
+  $('#apptSave').onclick = saveAppt;
+  $('#apptSuggestConfirm').onclick = ()=>{
+    const dt = parseDT($('#fDate').value, $('#fTime').value);
+    const c = new Date(dt.getTime()-86400000); c.setHours(9,0,0,0);
+    const use = c > new Date() ? c : new Date(Date.now()+3600000);
+    $('#fConfirm').value = isoLocal(use);
+    const r = new Date(dt.getTime()-3600000);
+    if (r > new Date()) $('#fRemind').value = isoLocal(r);
+    toast('✨ Call time suggested');
+  };
+  $('#enableSound').onclick = ()=>{ unlockAudio(); playClip('ui_greet'); toast('🔊 Sound on — Arivu will speak Tamil'); };
+  $('#textClose').onclick = ()=>$('#textModal').classList.remove('on');
+  $('#exportIcsAll').onclick = exportIcsAll;
+  $('#quickCallNext').onclick = ()=>{ const a=S.appointments.filter(x=>x.status==='pending').sort(byDT)[0];
+    if(!a) return toast('Nothing pending to confirm'); startCall(a.id,'confirm'); };
+  $('#demoConfirm').onclick = ()=>{ const a=S.appointments.filter(x=>x.status!=='cancelled').sort(byDT)[0];
+    if(!a) return toast('Add an appointment first'); switchTab('calls'); startCall(a.id,'confirm'); };
+  $('#demoReminder').onclick = ()=>{ const a=S.appointments.filter(x=>x.status!=='cancelled'&&parseDT(x.date,x.time)>new Date()).sort(byDT)[0];
+    if(!a) return toast('Add an appointment first'); switchTab('calls'); startCall(a.id,'reminder'); };
+  $('#playGreet').onclick = ()=>{ unlockAudio(); say('ui_greet'); pushMsg('arivu', CLIP_TEXT.ui_greet.ta, CLIP_TEXT.ui_greet.en); };
+  $('#delSamples').onclick = ()=>{ S.appointments = S.appointments.filter(a=>!a.sample); save(); renderAll(); toast('🧹 Sample data removed'); };
+  $('#testVoice').onclick = ()=>{
+    unlockAudio();
+    if (taVoice || S.settings.voiceURI){ speakText('வணக்கம்! இது அறிவு. உங்கள் சந்திப்புகளை நினைவில் வைத்துக்கொள்கிறேன்.',{lang:'ta-IN'}); toast('🔊 Speaking in Tamil'); }
+    else toast('⚠️ No Tamil system voice — Arivu uses the recorded Tamil voice instead');
+  };
+  $('#testClip').onclick = ()=>{ unlockAudio(); playClip('ui_greet'); toast('▶ Playing the recorded Tamil voice'); };
+  $('#voiceSel').onchange = e=>{ S.settings.voiceURI = e.target.value; save(); toast('🎙 Voice updated'); };
+  const rng = (id,key,lab)=>{ const el=$(id); el.oninput = ()=>{ S.settings[key]=Number(el.value); save(); $(lab).textContent = Number(el.value).toFixed(2); }; };
+  rng('#rate','rate','#rateVal'); rng('#pitch','pitch','#pitchVal');
+  $('#detailRead').onchange = e=>{ S.settings.detailRead = e.target.value; save(); };
+  $('#autoCall').onchange = e=>{ S.settings.autoCall = e.target.checked; save(); renderToday(); };
+  $('#autoStart').onchange = e=>{ S.settings.autoStart = e.target.checked; save(); };
+  $('#setName').oninput = e=>{ S.profile.name = e.target.value; save(); };
+  $('#setPhone').oninput = e=>{ S.profile.phone = e.target.value; save(); };
+  $('#expData').onclick = ()=>{
+    const txt = JSON.stringify(S,null,2);
+    const ok = downloadText('arivu-backup.json', txt, 'application/json');
+    showTextModal('arivu-backup.json', txt, ok ? 'Download started — keep this file as a backup.' : 'Downloads can be blocked in a preview — use Copy to save this text.');
+  };
+  $('#impData').onclick = ()=>{
+    showTextModal('Import JSON', '', 'Paste a backup you exported earlier, then tap Import.');
+    const b = document.createElement('button'); b.className='btn sm primary'; b.textContent='⤒ Import';
+    b.onclick = ()=>{
+      try{
+        const o = JSON.parse($('#tmArea').value);
+        if (!o || !o.appointments) throw new Error('bad');
+        S.appointments = o.appointments||[]; S.callLog = o.callLog||[];
+        S.profile = o.profile||{name:'',phone:''};
+        S.settings = Object.assign({}, DEFSET, o.settings||{});
+        save(); syncSettingsUI(); renderAll();
+        $('#textModal').classList.remove('on'); toast('✅ Data imported');
+      }catch(e){ toast('⚠️ That is not a valid Arivu backup'); }
+    };
+    $('#textModalBody').appendChild(b);
+  };
+  $('#resetData').onclick = ()=>{
+    if(!confirm('Erase all appointments, calls and settings?')) return;
+    S = { profile:{name:'',phone:''}, appointments:[], callLog:[], settings:Object.assign({},DEFSET) };
+    save(); syncSettingsUI(); renderAll(); toast('🗑 Everything cleared');
+  };
+  $('#search').addEventListener('input', renderAppts);
+  $('#filterStatus').addEventListener('change', renderAppts);
+  document.addEventListener('pointerdown', function once(){ unlockAudio(); document.removeEventListener('pointerdown', once); }, {once:true});
+  window.addEventListener('beforeunload', ()=>save());
+  document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState==='hidden') save(); });
+}
+function syncSettingsUI(){
+  $('#autoCall').checked=!!S.settings.autoCall; $('#autoStart').checked=!!S.settings.autoStart;
+  $('#rate').value=S.settings.rate||1; $('#pitch').value=S.settings.pitch||1;
+  $('#rateVal').textContent=Number(S.settings.rate||1).toFixed(2);
+  $('#pitchVal').textContent=Number(S.settings.pitch||1).toFixed(2);
+  $('#detailRead').value=S.settings.detailRead||'auto';
+  $('#setName').value=S.profile.name||''; $('#setPhone').value=S.profile.phone||'';
+}
+function boot(){
+  load(); bindAll(); initChips(); bindMic(); pickVoices(); syncSettingsUI();
+  if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = pickVoices;
+  const sp = $('#storePill'); if (sp) sp.textContent='💾';
+  renderAll(); switchTab('today');
+  $('#greetTa').textContent = CLIP_TEXT.ui_greet.ta;
+  pushMsg('arivu', CLIP_TEXT.ui_greet.ta, CLIP_TEXT.ui_greet.en, {clip:'ui_greet'});
+  pushMsg('arivu','Try: “Dentist tomorrow 10am” — or in Tamil: “நாளை காலை 10 மணிக்கு டாக்டர் சந்திப்பு”. I will remind you, then offer the Tamil confirmation call.',
+    'உதாரணமாக: “நாளை காலை 10 மணிக்கு டாக்டர் சந்திப்பு” என்று சொல்லுங்கள்.');
+  setInterval(()=>{
+    const n = new Date();
+    $('#clock').textContent = n.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'})+' · '+n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    if ($('#page-today').classList.contains('on')) renderToday();
+  }, 1000);
+  setInterval(automationTick, 12000);
+  setTimeout(automationTick, 2500);
+}
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+</body>
+</html>
